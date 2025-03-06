@@ -1,0 +1,16 @@
+"related questions": [
+    	"The user is asking about ravana falls.",
+	"The user is asking for information about ravana ella"
+	"The user is asking for more details about ravana falls."
+]
+
+<startcontext>
+
+This document include ravana falls details and brief discription.
+
+Ravana Ella Falls is an impressive waterfall with a fascinating story behind it. 
+Known to be one of the widest falls in the country, Ravana falls towers around 25m in height. 
+According to legend, it was said that King Ravana, from the Ramayana, 
+kidnapped Princess Sita and hid her in the caves behind the waterfall.
+
+<endcontext>

@@ -1,0 +1,97 @@
+
+"related question" : {
+	"The user is asking for room details."
+	"The user is asking for information about the hotel rooms. "
+	"The user is asking for room packages.",
+	"The user is requesting information about room packages.",
+	"The user is asking for the available room types.",
+	"The user is asking about the types of rooms offered. "
+	"The user is asking if there are any special room packages available."
+	"The user is asking for information about all the room packages offered by the hotel.",
+	}
+
+
+<startcontext>
+
+
+This document contains all room packages details only
+
+
+
+"package name : deluxe Room package"
+	{
+
+	deluxe Rooms package overview
+
+	The Deluxe Room at Hide Ella Resort is a spacious
+	33-square-meter retreat with stunning views of Ella
+	Gap or lush tree canopies. Guests enjoy a range of
+	amenities, including luxurious toiletries, 
+	high-speed internet, an LED TV, a mini bar, 
+	and tea/coffee-making facilities. Additional 
+	features include a writing table, air conditioning, 
+	and a safe locker, ensuring a comfortable and memorable 
+	stay in Sri Lanka's scenic hill country.
+
+	}
+
+"package name : family Rooms package"
+	
+	{
+
+	Family Room package overview
+
+	With breath taking view of Ella gap and overlooking tree canopy. 
+	Our family room coupled with extra-large balcony with connecting 
+	door offers spacious comfortable surroundings. It has been individually 
+	styled to enhance the blending into the environment. The room features 
+	with two king size beds. Sleeps 2 adults and 2 children.
+	Experience the beauty and serenity of Sri Lanka’s scenic hill country. 
+	Hide Ella Resort is an elegant, chic hotel that stands on a scenic 1acre, 
+	surrounded by a stunning landscape. The uniquely designed resort blends well 
+	with nature, and consists of charming. The exquisite country side, breathtaking 
+	views and exciting nature trails will assure you of a memorable holiday at one of the most 
+	breathtaking Ella hotels in the region. Area-33 square meters Out door view -Garden+Montain 
+	view Attached Bathroom
+
+	}
+
+"package name : Premium Rooms package"
+
+	{
+
+	Premium Rooms overview
+
+	The Premium Room at Hide Ella Resort offers a spacious 
+	33-square-meter retreat with an extra-large balcony and 
+	stunning views of the garden and mountains, accommodating 
+	up to two adults. Designed to blend with its green surroundings, 
+	this room features amenities such as luxurious toiletries, 
+	high-speed internet, an LED TV, a mini bar, and tea/coffee-making 
+	facilities. Additional comforts include air conditioning, 
+	a writing table, and a safe locker, ensuring a relaxing and 
+	memorable stay in Sri Lanka's scenic hill country.
+
+	}
+
+
+"package name : Twin Rooms package"
+
+	{
+
+	Twin Rooms overview
+
+	The Twin Room at Hide Ella Resort features a spacious 
+	33-square-meter layout with two extra-long single beds, 
+	accommodating guests comfortably. With views of either 
+	Ella Gap or a lush tree canopy, this room is designed 
+	to enhance your experience in Sri Lanka's scenic hill country. 
+	Amenities include luxurious toiletries, high-speed internet, 
+	an LED TV, a mini bar, and tea/coffee-making facilities. 
+	Additional features like air conditioning, a writing table, 
+	and a safe locker ensure a relaxing and memorable stay in 
+	this beautifully designed resort.
+
+	}
+
+<endcontext>

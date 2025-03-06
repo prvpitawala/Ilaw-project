@@ -1,0 +1,10 @@
+This document include ella 6 icon day tuk tuk ride Meeting and Pickup details
+
+<startcontext>
+
+* Meeting points: Hide Ella Hotel & Resort
+* Start time: 09:00 AM
+* Endpoint: This activity ends back at Hide Ella Hotel & Resort.
+* Duration: 8 hours
+
+<endcontext>

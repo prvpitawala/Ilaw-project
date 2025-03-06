@@ -1,0 +1,100 @@
+
+
+"related question" : {
+	"The user is asking for pool details"
+	"The user is asking for pool packages.",
+	"The user is requesting information about pool packages.",
+	"The user is asking about the types of pool packages offered. "
+	"The user is asking if there are any special pool packages available.",
+	"The user is asking for a list of all the pool packages available at the hotel."	
+}
+
+<startcontext>
+
+this document contains pool packages details.
+
+Opening hours: 7am- 8pm
+
+Cancellation Policy
+You can cancel up to 24 hours in advance of the experience.
+
+What’s Can Include
+* Hot jacuzzi
+* Sauna
+* Steam room
+* Lunch
+* Welcome drink
+* Duration 1 hour to 3 1/2 hours
+
+Prices  {
+	* Package A (3 1/2 hours)  – 45 USD per person
+	* Package B (1 1/2 hours)  – 20 USD per person
+	* Package C (1 1/2 hours)  – 20 USD per person
+	* Package D (2 hours)      – 16 USD per person
+	* Package E (1 hour)       – 14 USD per person
+	}
+
+
+Package A* (3 1/2 hours)
+	{
+	Swimming Pool
+	Jacuzzi- Hot Tub (30 Minutes)
+	Steam Room (20 Minutes)
+	Sauna(20 Miniutes)
+	Welcome Drink
+	Lunch
+	$45.00 pp
+	}
+
+Package B (1 1/2 hours)
+	{
+	Jacuzzi- Hot Tub (30 Minutes)
+	Steam Room (20 Minutes)
+	Sauna(20 Miniutes)
+	Welcome Drink
+	$20.00 pp
+	}
+
+
+Package C (1 1/2 hours)
+	{
+	Swimming Pool
+	Steam Room (20 Minutes)
+	Sauna(20 Minutes)
+	Welcome Drink
+	$20.00 pp
+	}
+
+Package D (2 hours) 
+	{
+	Swimming Pool
+	Jacuzzi- Hot Tub (30 Minutes)
+	Steam Room (20 Minutes)
+	Welcome Drink
+	$16.00 pp
+	}
+
+Package E (1 hour) 
+	{
+	Steam Room (20 Minutes)
+	Sauna(20 Miniutes)
+	Welcome Drink
+	$14.00 pp
+	}
+
+<endcontext>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

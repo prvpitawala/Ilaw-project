@@ -1,0 +1,21 @@
+
+"related questions": [
+	"The user is asking for more details about pool package_E",
+    	"The user is asking for more information about pool package_E",
+    	"The user is asking for all details about pool package_E."
+]
+
+<startcontext>
+
+This document contains pool 'package-E' details only
+
+<packageName> package-E </packageName>
+
+1 hour duration
+Steam Room (20 Minutes)
+Sauna(20 Miniutes)
+Welcome Drink
+$14.00 pp
+	
+
+<endcontext>

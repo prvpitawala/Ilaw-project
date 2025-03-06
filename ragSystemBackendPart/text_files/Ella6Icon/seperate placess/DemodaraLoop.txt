@@ -1,0 +1,16 @@
+
+"related questions": [
+    	"The user is asking about demodara loop.",
+	"The user is asking for information about demodara loop."
+	" The user is asking for more details about demodara loop."
+  ]
+
+<startcontext>
+
+This document include demodara loop details and brief discription.
+
+The spiral railway is said to be the most fascinating civil engineering marvels on the island. 
+The Demodara Loop is about 10 mins from Ella, after the Nine Arch Bridge. The railway was built 
+in the 20th century by the British who mainly used it to transport tea from Uva to the city of Colombo.
+
+<endcontext>

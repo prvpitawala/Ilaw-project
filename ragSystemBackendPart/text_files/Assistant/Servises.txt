@@ -1,0 +1,25 @@
+This document contains services of the Hide ella hotel.
+
+"related questions": [
+    " The user is asking about the types of services offered by the hotel. ",
+    "The user is asking for more information about the services offered by the hotel.",
+    "The user is asking for a list of services offered by the hotel.",
+    "The user is asking for a general overview of what to expect from the hotel's services.",
+    "The user is asking for a list of the services offered by the hotel",
+    "The user is asking for a detailed explanation of the services offered by the hotel. ",
+    "The user is asking how they can get more information about the services offered by the hotel"
+    "The user is asking for a list of specific services offered by the hotel",
+    "The user is asking about the bot's available services"
+  ]
+
+<startcontext> 
+
+All the services of hide ella hotel.
+
+1. Ella 6 icon day tuk tuk ride.
+2. Lipton seat ride. 
+3. Scooter ride.
+4. Pool packages.
+5. Room packages.
+
+<endcontext>

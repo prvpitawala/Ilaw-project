@@ -9,9 +9,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "bootstrap": "^5.3.3",
-    "electron": "^34.2.0"
-  }
+    "electron": "^34.3.0"
+  },
+  "description": ""
 }

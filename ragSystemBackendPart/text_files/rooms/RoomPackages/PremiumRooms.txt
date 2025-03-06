@@ -1,0 +1,56 @@
+
+"related questions": [
+	"The user is interested in the Premium Room Package.",
+	"The user is asking for more details about the Premium Room Package. ",
+	"The user is asking for more information about the Premium Room Package. ",
+	"The user is asking for details about the Premium Room Package."
+	"The user is requesting full details about the Premium Room."  
+]
+
+<startcontext>
+
+full details about the Premium Rooms
+
+Our Premium room coupled with extra-large balcony with spacious comfortable surroundings.
+It designed to blend effortlessly to green surrounding. Sleeps 2 adults.
+Experience the beauty and serenity of Sri Lanka’s scenic hill country. 
+Hide Ella Resort is an elegant, chic hotel that stands on a scenic 1acre, 
+surrounded by a stunning landscape. The uniquely designed resort blends well with nature, 
+and consists of charming. The exquisite country side, breathtaking views and exciting 
+nature trails will assure you of a memorable holiday at one of the most breathtaking 
+Ella hotels in the region. Area-33 square meters Out door view -Garden+Montain view Attached Bathroom
+
+Premium Room Amenities
+
+Bath & Personal Care
+* Toiletries [Shampoo, Shower Gel, Conditioner & Body Lotion]
+* Shaving Kit
+* Vanity Kit
+* Shower Caps
+* Bathrobes & Slippers
+* Tissue Box
+* Sewing Kit
+* Hair Dryer
+* Iron & Iron Board [On request]
+
+Media and Entertainment
+* High speed internet access
+* LED TV
+* International & Local TV Channels
+
+Refreshments
+* Mini Bar
+* Tea & Coffee making facilities
+* Filtered Bottled Water
+
+Other
+* Note Book & Pen
+* Writing Table
+* Wardrobe
+* Two Umbrellas
+* Rechargeable Touch
+* Intercom service
+* Safe Locker
+* Air Conditioner
+
+<endcontext>

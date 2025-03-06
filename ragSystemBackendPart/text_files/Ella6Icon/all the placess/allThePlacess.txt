@@ -1,0 +1,54 @@
+
+"related questions": [
+	"The user is asking for recommendations for nearby attractions or places to visit during their stay.",
+	"The user is asking for recommendations for must-see spots or activities around the hotel.",
+	"The user is asking for suggestions on popular tourist destinations close to the hotel",
+	"The user is asking for a list of interesting places to visit in the area."
+	"The user is asking for recommendations for local sights or landmarks for a first-time visitor.",
+	"The user is asking for recommendations on nearby attractions that they should not miss while staying at the hotel.",
+	"The user is asking for recommendations for cultural or historical sites to visit nearby. "
+  ]
+
+<startcontext>
+
+1) Ella Rock
+
+The iconic Ella Rock is a mesmerizing view point that gives you an unhindered view of the mountain 
+silhouettes and the villages below. Loved by hikers and nature enthusiasts, 
+conquering Ella rock during your stay here is an absolute must!
+
+2) Nine Arches Bridge
+
+The famous Nine Arches Bridge has made it to almost every Instagram feed of explorers to the island. 
+The bridge is located between Ella and Demodara railway stations and is most famous because of its curved structure. 
+Known to be the best example of a colonial-era railway, the bridge has attracted tourists from around the world. The bridge is approximately 30m high.
+
+3) Little Adam’s Peak
+
+Deriving its name from its big brother, the sacred mountain Adam’s Peak, Little Adam’s Peak is 2243m above sea level. 
+The trail to the mountain is fairly average and would require you to have a medium level of fitness. With marked paths, 
+you’ll have to clamber through some narrow rocky areas to reach the summit. The view from the peak is definitely worth the arduous climb. 
+There are a number of hotels located in the area to cater to the large number of tourists that visit the mountain. The ideal time to start 
+your hike is either in the morning or late evening, when it isn’t to hot.
+
+4) Rawana Falls
+
+Ravana Ella Falls is an impressive waterfall with a fascinating story behind it. 
+Known to be one of the widest falls in the country, Ravana falls towers around 25m in height. 
+According to legend, it was said that King Ravana, from the Ramayana, 
+kidnapped Princess Sita and hid her in the caves behind the waterfall.
+
+5) Demodara Loop
+
+The spiral railway is said to be the most fascinating civil engineering marvels on the island. 
+The Demodara Loop is about 10 mins from Ella, after the Nine Arch Bridge. The railway was built 
+in the 20th century by the British who mainly used it to transport tea from Uva to the city of Colombo.
+
+
+6) Uva Halpewatte Tea Factory Tour
+
+Find out how your favourite cup of Ceylon tea was made! Take a tour through the heritage of 
+tea and visit the Halpe tea factory, located a few minutes from the town. Here, you’ll find out how 
+tea is manufactured, graded, processed and packed! The onsite tea boutique allows you to buy your fresh box of tea before you leave.
+
+<endcontext>

@@ -1,0 +1,17 @@
+"related questions": [
+    	"The user is asking about little adams peak.",
+	"The user is asking for information about adams peak"
+	"The user is asking for more details about little adams peak."
+]
+
+<startcontext>
+
+This document include little adams peak details and brief discription.
+
+Deriving its name from its big brother, the sacred mountain Adam’s Peak, Little Adam’s Peak is 2243m above sea level. 
+The trail to the mountain is fairly average and would require you to have a medium level of fitness. With marked paths, 
+you’ll have to clamber through some narrow rocky areas to reach the summit. The view from the peak is definitely worth the arduous climb. 
+There are a number of hotels located in the area to cater to the large number of tourists that visit the mountain. The ideal time to start 
+your hike is either in the morning or late evening, when it isn’t to hot.
+
+<endcontext>
