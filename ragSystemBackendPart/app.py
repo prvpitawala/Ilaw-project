@@ -86,9 +86,6 @@ def initialize():
         is_component_initialized = True
         print("Step_6 : All the components are initialized\n")
 
-
-
-
 # root route
 @app.route('/')
 def index_html():
@@ -149,8 +146,6 @@ def get_response():
         print("##"*40)
     # Return the response as JSON
     return jsonify({'response': bot_response})
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
