@@ -1,9 +1,8 @@
 import hashlib
-# from flask import Flask, request, jsonify
 from flask_cors import CORS
 import openai
 #backend
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, jsonify
 import google.generativeai as genai
 from sentence_transformers import SentenceTransformer, CrossEncoder 
 from utill import *
@@ -61,7 +60,7 @@ def initialize():
     print("Step_1 : Gemini setup completed. \n")
 
 
-    model_rel_path = r"../models/all-MiniLM-L12-v2"
+    model_rel_path = r"../models/embedding_models/all-MiniLM-L12-v2"
     embedding_model = SentenceTransformer(model_rel_path)
     print("Step_2 : Embedding model load completed. \n")
 
