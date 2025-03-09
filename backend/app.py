@@ -197,6 +197,9 @@ def upload_document():
     if not collection:
         return jsonify({"error": "Collection is required"}), 400
 
+    base_dir = os.path.join(BASE_SAVE_DIR)
+    os.makedirs(base_dir,exist_ok=True)
+
     # Define collection directory
     collection_dir = os.path.join(BASE_SAVE_DIR, collection)
 
