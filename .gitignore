@@ -1,7 +1,2 @@
-
-ragSystemBackendPart/models
-ragSystemBackendPart/virtual_environment
-
-
-ragSystemFrontendPart/virtual_environment
-ragSystemFrontendPart/frontend/node_modules
+models
+files
