@@ -1,0 +1,8 @@
+flask-cors
+openai
+google
+google-generativeai
+sentence-transformers
+pandas
+faiss-cpu
+

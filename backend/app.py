@@ -61,11 +61,12 @@ def initialize():
     print("Step_1 : Gemini setup completed. \n")
 
 
-    model_rel_path = r"../models/all-MiniLM-L12-v2"
+    model_rel_path = r"../models/embedding_models/all-MiniLM-L12-v2"
     embedding_model = SentenceTransformer(model_rel_path)
     print("Step_2 : Embedding model load completed. \n")
 
     print("Step_3 : All the components are initialized\n")
+
 
 def fileEmbeddings():
     # extract the documents from zip file.
@@ -94,6 +95,7 @@ def fileEmbeddings():
 # Function to hash passwords
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
+
 
 # register Profile Endpoint    
 @app.route("/register", methods=["POST"])

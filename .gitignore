@@ -1,2 +1,5 @@
 models
 files
+
+backend/env
+frontend/node_modules
