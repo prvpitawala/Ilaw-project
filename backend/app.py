@@ -1,9 +1,8 @@
 import hashlib
-# from flask import Flask, request, jsonify
 from flask_cors import CORS
 import openai
 #backend
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, jsonify
 import google.generativeai as genai
 from sentence_transformers import SentenceTransformer, CrossEncoder 
 from utill import *
