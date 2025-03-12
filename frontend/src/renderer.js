@@ -65,6 +65,9 @@ const UIComponents = {
         </div>
         <ul class="file-list" id="fileList">
         </ul>
+        <div class="add-document-in-side-bar">
+            <button onclick="collectionDocumentUpdateSection()" class="chat-section-document-add-btn"> + </button>
+        </div>
     </div>`,
 
     mainChat: `
@@ -83,8 +86,7 @@ const UIComponents = {
         </div>
 
         <!-- Chat Input -->
-        <div class="messageBox">
-            <input type="text" class="messageInput" id="messageInput" placeholder="Type your question">
+        <div class="messageBox" id="messageBox">
             <div class="chat-send-button" onclick="submitQuery()">
                 <img src="../public/icons/send-icon.png" class="send-button" alt="Send">
             </div>
@@ -139,9 +141,33 @@ const UIComponents = {
             </div>
         </div>
     </section>
-    `
+    `,
+    collectionDocuentUpdataSection: `
+    <section class="collection-document-update-section">
+        <div class="collection-document-upload-section-container">
+            <div class="collection-document-upload-container">
+                <div class="back-button" id="backButton" data="collection-document-update-section" onclick="backToMessage(event)">
+                    <img src="../public/icons/back-icon.png" class="back-button-img" alt="back">
+                </div>
+                <div class="fileupbox">
+                    <div class="label">Pick Files</div>
+                    <div class="file-upload-box" onclick="document.getElementById('fileInput').click()">
+                        <div class="plus-icon">+</div>
+                        <div class="file-text" id="fileNamesText">Drag the files or Paste the files</div>
+                        <input type="file" id="fileInput" style="display: none;" multiple onchange="displayFileNames()">
+                    </div>
+                    <div class="file-format">Supported file format (Docx, Pdf, Odt)</div>
+                </div>
+                <div>
+                    <div class="label">Collection Name</div>
+                    <div class="input-box" id="collectionName"></div>
+                    <ul id="suggestionList" class="suggestions"></ul>
+                </div>
+                <button class="upload-button" data="collection-document-update-section" onclick="updateCollectionDocuments(event)">Update</button>
+            </div>     
+        </div>
+    </section>`,
 };
-
 
 window.onload = async function() {
     profile = await getProfile();
@@ -156,12 +182,6 @@ window.onload = async function() {
 };
 
 
-document.getElementById('fileInput').addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        console.log("Selected file:", file.name);
-    }
-});
 
 function loadUI(section,UIname) {
     if (UIComponents[UIname]) {
@@ -248,7 +268,51 @@ async function setting() {
     document.getElementById('settingDefaltUserPic').innerHTML = `${username[0].toUpperCase()}${username[1]}`;
 
     document.getElementById('settingUserName').innerHTML = `${username}`;
+}
 
+async function collectionDocumentUpdateSection() {
+    document.getElementsByTagName('body')[0].innerHTML += UIComponents.collectionDocuentUpdataSection;
+    collectionName = document.getElementById('chatTitle').innerText;
+    document.getElementById('collectionName').innerText = collectionName;
+}
+
+async function updateCollectionDocuments(event) {
+    let myevent={'currentTarget':event.currentTarget};
+    const clicktarget = event.currentTarget;
+    const fileInput = document.getElementById('fileInput');
+    collectionName = document.getElementById('chatTitle').innerText;
+
+    if (!fileInput.files.length) {
+        alert("Please select at least one file.");
+        return;
+    }
+    
+    // Initialize FormData
+    const formData = new FormData();
+    formData.append('collection', collectionName);
+
+    // Append each file with key as "files"
+    Array.from(fileInput.files).forEach((file) => {
+        formData.append('files', file);  // Append each file separately
+    });
+
+    try {
+        const response = await fetch('http://127.0.0.1:5000/upload/doc', {
+            method: 'POST',
+            body: formData,  // Send FormData directly (DO NOT use JSON.stringify)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            backToMessage(myevent);  // Call dashboard function if upload is successful
+        } else {
+            alert(`Upload failed: ${result.error}`);
+        }
+    } catch (error) {
+        console.error("Error uploading files:", error);
+        alert("Upload failed. See console for details.");
+    }
 }
 
 function backTo(event) {
@@ -259,6 +323,17 @@ function backTo(event) {
         Section.parentNode.removeChild(Section);
     }
     hideShow('userButtonDropbox','hide');
+}
+
+function backToMessage(event) {
+    let clickedElement = event.currentTarget;
+    let userData = clickedElement.getAttribute("data");
+    var Section = document.querySelector(`.${userData}`);
+    if (Section) {
+        Section.parentNode.removeChild(Section);
+    }
+    collection_name = document.getElementById('chatTitle').innerText;
+    messageSection(collectionName);
 }
 
 function userDataEditSection(event) {
@@ -295,6 +370,12 @@ async function messageSection(collectionName) {
         <font class="file-title">${file}</font>
         </li>\n
         `).join("");
+    document.getElementById('messageBox').innerHTML = `<input type="text" class="messageInput" id="messageInput" placeholder="Type your question" onclick="this.focus()">` + document.getElementById('messageBox').innerHTML;
+    document.getElementById("messageBox").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            submitQuery();
+        }
+    });
 }
 
 function sideBar(visibility){
@@ -402,10 +483,6 @@ async function checkPassword(password) {
             body: JSON.stringify({ password: password })
         });
 
-        // if (!response.ok) {
-        //     throw new Error(`HTTP error! Status: ${response.status}`);
-        // }
-
         let data = await response.json();  // Assuming the server responds with JSON
 
         console.log("Server Response:", data);
@@ -457,7 +534,6 @@ async function uploadDocument() {
         const result = await response.json();
 
         if (response.ok) {
-            alert(`Successfully uploaded ${fileInput.files.length} file(s).`);
             dashboard();  // Call dashboard function if upload is successful
         } else {
             alert(`Upload failed: ${result.error}`);
@@ -467,8 +543,6 @@ async function uploadDocument() {
         alert("Upload failed. See console for details.");
     }
 }
-
-
 
 async function getCollections() {
     try {

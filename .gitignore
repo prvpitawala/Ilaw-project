@@ -1,5 +1,6 @@
 models
 files
+__pycache__
 
 backend/env
 frontend/node_modules

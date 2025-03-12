@@ -2,6 +2,8 @@ import hashlib
 from flask_cors import CORS
 import openai
 #backend
+import os
+import shutil
 from flask import Flask, request, jsonify
 import google.generativeai as genai
 from sentence_transformers import SentenceTransformer, CrossEncoder 
@@ -18,9 +20,6 @@ doc_store = {}
 #Structure : {collection_name: embedding,...}
 embedding_store = {}
 
-# OpenAI API Key (replace with your actual key)
-openai.api_key = "your-api-key"
-
 ###############################################################################
 
 def initialize():
@@ -30,8 +29,13 @@ def initialize():
     global doc_store
     global embedding_store
 
-    genai.configure(api_key='AIzaSyBfFtmf5-de0x0O3Tibyc4anGaioF4Uqj0')
+    BASE_SAVE_DIR = r"../files"
+    remove_subdirectories(BASE_SAVE_DIR)
 
+    # genai.configure(api_key='AIzaSyBfFtmf5-de0x0O3Tibyc4anGaioF4Uqj0')
+    genai.configure(api_key=profile_data_store['apiKey'])
+
+    print(profile_data_store['apiKey'])
         # This section for generate Gemini response
     generation_config = {
         "temperature": 0.15, #0.15
@@ -69,8 +73,8 @@ def initialize():
 
 def fileEmbeddings():
     # extract the documents from zip file.
-    file_rel_path = r"../files"
-    text_files_list = read_text_files_from_directory(file_rel_path)
+    BASE_SAVE_DIR = r"../files"
+    text_files_list = read_text_files_from_directory(BASE_SAVE_DIR)
     print("Step_1 : Document extracted completed. \n")
 
 
@@ -94,6 +98,16 @@ def fileEmbeddings():
 # Function to hash passwords
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
+
+def remove_subdirectories(parent_folder):
+    # Iterate through items in the parent folder
+    for item in os.listdir(parent_folder):
+        item_path = os.path.join(parent_folder, item)
+
+        # Check if it's a directory (subfolder)
+        if os.path.isdir(item_path):
+            shutil.rmtree(item_path)  # Remove the entire subdirectory
+            print(f"Removed folder: {item_path}")
 
 
 # register Profile Endpoint    
@@ -146,8 +160,8 @@ def check_password():
     except Exception as e:
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
 
-"""
-# Upload Document Endpoint
+
+"""# Upload Document Endpoint
 @app.route("/upload/doc", methods=["POST"])
 def upload_document():
     collection = request.form.get("collection")
@@ -185,7 +199,7 @@ def upload_document():
 
         except Exception as e:
             return jsonify({"error": f"Could not process file {file_name}: {e}"}), 400
-
+        
     return jsonify({"message": f"Uploaded {len(uploaded_files)} files to {collection}"}), 200
 """
 
@@ -230,6 +244,8 @@ def upload_document():
 
     return jsonify({"message": f"Uploaded {len(saved_files)} files to '{collection}'", "files": saved_files}), 200
 
+
+
 # Get Document Endpoint
 @app.route("/get/doc", methods=["POST"])
 def get_document():
@@ -247,16 +263,18 @@ def get_document():
         return jsonify({"error": f"Could not get content in this file: {e}"}), 400
 
     return jsonify({"message": f"filename:{fileName}, collection :{collection},content :{content}"}), 200
-"""
-# Get Document Collections Endpoint
+
+
+
+"""# Get Document Collections Endpoint
 @app.route("/get/document/collections", methods=["POST"])
 def get_document_collections():
     if not document_store:  # Correctly checks if the dictionary is empty
         return jsonify({"message": []}), 200
 
     return jsonify({"message": list(document_store.keys())}), 200
-"""
 
+"""
 
 # Get Document Collections Endpoint
 @app.route("/get/document/collections", methods=["POST"])
@@ -273,8 +291,8 @@ def get_document_collections():
 
 # Get File names
 
-"""
-@app.route("/get/document/filenames", methods=["POST"])
+
+"""@app.route("/get/document/filenames", methods=["POST"])
 def get_file_names():
     collection = request.form.get("collection")
     if not document_store:  # Correctly checks if the dictionary is empty

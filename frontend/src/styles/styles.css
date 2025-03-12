@@ -25,7 +25,8 @@ body {
 .body-container {
     display: flex;
     justify-content: center;
-    width: 60%;
+    width: 60%; 
+    /* width: 100%; */
     align-items: center;
     height: calc(100vh-31px);
     background-color: #fff;
@@ -307,10 +308,25 @@ div#user-button:hover {
 
 .sidebar {
     display: flex;
+    /* position: relative; */
     height: 100%;
     flex-direction: column;
     flex-wrap: nowrap;
     border-right:1px solid #ccc;
+}
+
+.file-list {
+    height: 76vh;
+    overflow-y: auto;
+}
+
+.file-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.file-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
 }
 
 .back-btn-sec {
@@ -328,6 +344,8 @@ img.side-bar-hide-button-img {
 .show-btn {
     margin-top: 31px;
 }
+
+
 
 li.file-item {
     display: flex;
@@ -357,12 +375,19 @@ img.file-extention-img {
     visibility: hidden;
 }
 
+button.chat-section-document-add-btn {
+    background: white;
+    color: #4e4e4e;
+    border: 1px solid #4e4e4e;
+}
+
 .main-content {
     display: flex;
+    position: fixed;
     flex-direction: column;
     flex-wrap: nowrap;
-    height: 100%;
-    width: 100%;
+    height: 96%;
+    width: 80%;
     justify-content: space-between;
     align-items: center;
 }
@@ -397,7 +422,9 @@ img.back-button-img {
 
 div#chatTitle {
     width: 74%;
-    margin: 0 92px 0 20px;
+    text-align: left;
+    padding: 0 0 0 13%;
+    /* margin: 0 92px 0 20px; */
 }
 
 .content-box {
@@ -406,14 +433,15 @@ div#chatTitle {
     border-radius: 15px;
     margin: 5px;
     text-align: left;
-    width: 98%;
-    min-width: 37rem;
+    width: 64%;
+    min-width: 32rem;
 }
 
 .result-show {
     padding: 15px;
     font-family: ui-sans-serif, -apple-system, system-ui, Segoe UI, Helvetica, Apple Color Emoji, Arial, sans-serif, Segoe UI Emoji, Segoe UI Symbol;
     text-align: justify;
+    width: 100%;
 }
 
 @keyframes blink {
@@ -437,7 +465,7 @@ div#chatTitle {
     display: flex;
     position: relative;
     bottom: 0;
-    width: 100%;
+    width: 64%;
     padding-bottom: 25px;
     padding-top: 23px;
     justify-content: space-around;
@@ -448,6 +476,8 @@ div#chatTitle {
 input#messageInput {
     width: 92%;
     text-align: left;
+    pointer-events: all !important;
+    opacity: 1 !important;
 }
 
 .chat-send-button {
@@ -469,7 +499,7 @@ img.send-button {
     opacity: 60%;
 }
 
-.user-setting-section, .user-password-Autontication-section {
+.user-setting-section, .collection-document-update-section, .user-password-Autontication-section {
     display: flex;
     position: absolute;
     width: 100%;
@@ -489,6 +519,26 @@ img.send-button {
     border-radius: 35px;
     padding: 70px 12px;
     background-color: white;
+}
+
+.collection-document-upload-section-container {
+    display: flex;
+    flex-direction: row;
+    border: 1px solid #ccc;
+    border-radius: 35px;
+    padding: 70px 12px;
+    background-color: white;
+    width: 60%;
+} 
+
+.collection-document-upload-container {
+    display: flex;
+    position: relative;
+    align-content: center;
+    justify-content: center;
+    justify-items: stretch;
+    width: 100%;
+    flex-direction: column;
 }
 
 .setting-container {
