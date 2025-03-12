@@ -228,3 +228,24 @@ def format_text(text):
         
     return text
 
+
+def create_prompt_with_tagged_contexts(retrived_doc_list, user_message, num_docs=3):
+    # Make sure we don't try to access more docs than are available
+    num_docs = min(num_docs, len(retrived_doc_list))
+    
+    # Create individually tagged context sections
+    context_parts = []
+    
+    for i in range(num_docs):
+        if i < len(retrived_doc_list):
+            # Create a tagged context for each document
+            tagged_context = f"<context_{i+1}>\n{retrived_doc_list[i]}\n</context_{i+1}>"
+            context_parts.append(tagged_context)
+    
+    # Join all context sections with newlines
+    combined_contexts = "\n\n".join(context_parts)
+    
+    # Create the final prompt
+    prompt_for_llm = f'{combined_contexts}\n\n' + "User message : " + user_message
+    
+    return prompt_for_llm

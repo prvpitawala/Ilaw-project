@@ -38,7 +38,7 @@ def initialize():
     print(profile_data_store['apiKey'])
         # This section for generate Gemini response
     generation_config = {
-        "temperature": 0.15, #0.15
+        "temperature": 0, #0.15
         "top_p": 0.6, #0.6
         "top_k": 20, #20
         "max_output_tokens": 1024,
@@ -47,16 +47,17 @@ def initialize():
 
 
     model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
+        model_name="gemini-1.5-pro",
         generation_config=generation_config,
         system_instruction="""
-
-        Act as an AI assistant.
-        01. find the answers only in the given context and provide answers base on that.
-        02. Provide attractive structured answers
-        03. Use colourfull simboles 
-        04. If answers not in the context appologice like this 'Sorry. I have no details about that please try again. '
-        05. Avoid to tell user giving answer based on a context""" 
+    Act as an AI assistant.
+    1. Don't tell you are giving answers frpm context. 
+    1. Find answers only from the provided context.
+    3. Need structured answers when neccesory.
+    2. Enhance readability with attractive symbols.
+    3. Need most explainable answers it is must. 
+    4. Keep answers concise and directly address the user's question.
+    """
         )
     
     chat_session = model.start_chat()
@@ -337,6 +338,11 @@ def get_database():
                     {[f"collection : {i}, fils : {[f"name: {j},  content : {document_store[i][j]} " for j in document_store[i].keys()]}" for i in document_store.keys()]}"""}), 200
 
 
+
+
+
+
+
 def get_response(quary, collection):
     # Extract the user's message
     user_message = quary
@@ -365,7 +371,8 @@ def get_response(quary, collection):
 
 
         # Get the final response
-        Prompt_for_llm = f'<context>\n\n{retrived_doc_list[0]}\n\n</context>\n\n' + "User message : " + user_message
+        Prompt_for_llm = create_prompt_with_tagged_contexts(retrived_doc_list, user_message, 2)
+        #Prompt_for_llm = f'<context>\n\n{retrived_doc_list[0]}\n\n</context>\n\n' + "User message : " + user_message
      
         print("\nThis is the prompt for LLM :")
         print("----------------")
