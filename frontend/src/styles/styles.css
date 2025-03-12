@@ -224,6 +224,13 @@ div#user-button:hover {
 .file-text {
     font-size: 14px;
     color: #555;
+    height: 16px;
+    padding: 0px 11px;
+    overflow-y: auto;
+}
+
+.file-text::-webkit-scrollbar {
+    width: 4px;
 }
 
 .file-format {
@@ -252,6 +259,18 @@ div#user-button:hover {
     text-align: left;
 }
 
+.collection-name-section {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+img#collectionAvailabilityImg {
+    width: 22px;
+    position: absolute;
+    right: 5px;
+    bottom: 59px;
+}
 
 
 .upload-button {
@@ -318,6 +337,7 @@ div#user-button:hover {
 .file-list {
     height: 76vh;
     overflow-y: auto;
+    overflow-x: clip;
 }
 
 .file-list::-webkit-scrollbar {

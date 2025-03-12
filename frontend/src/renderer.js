@@ -46,13 +46,13 @@ const UIComponents = {
                 
                 <input type="file" id="fileInput" style="display: none;" multiple onchange="displayFileNames()">
             </div>
-            <div class="file-format">Supported file format (Docx, Pdf, Odt)</div>
+            <div class="file-format">Supported file format (Text)</div>
         </div>
 
-        <div>
-            <div class="label">Select Collection</div>
-            <input type="text" class="input-box" id="collectionSelect" placeholder="Enter collection name" onkeyup="showSuggestionsCallection()">
-            <ul id="suggestionList" class="suggestions"></ul>
+        <div class="collection-name-section">
+            <div class="label">Collection Name</div>
+            <input type="text" class="input-box" id="collectionSelect" placeholder="Enter collection name" onclick="getCollections()" onkeyup="showSuggestionsCallection()">
+            <img src="" id="collectionAvailabilityImg" class="document-upload-collection-availability-img">
         </div>
 
         <button class="upload-button" onclick="uploadDocument()">Upload</button>
@@ -156,18 +156,19 @@ const UIComponents = {
                         <div class="file-text" id="fileNamesText">Drag the files or Paste the files</div>
                         <input type="file" id="fileInput" style="display: none;" multiple onchange="displayFileNames()">
                     </div>
-                    <div class="file-format">Supported file format (Docx, Pdf, Odt)</div>
+                    <div class="file-format">Supported file format (Text)</div>
                 </div>
                 <div>
                     <div class="label">Collection Name</div>
                     <div class="input-box" id="collectionName"></div>
-                    <ul id="suggestionList" class="suggestions"></ul>
                 </div>
                 <button class="upload-button" data="collection-document-update-section" onclick="updateCollectionDocuments(event)">Update</button>
             </div>     
         </div>
     </section>`,
 };
+
+var collections;
 
 window.onload = async function() {
     profile = await getProfile();
@@ -400,24 +401,18 @@ function sideBar(visibility){
     }
 }
 
+
 async function showSuggestionsCallection() {
     const input = document.getElementById("collectionSelect");
-    const suggestionList = document.getElementById("suggestionList");
     const query = input.value.toLowerCase();
-    suggestionList.innerHTML = ""; // Clear previous suggestions
-
+    const availability = document.getElementById('collectionAvailabilityImg');
     if (query) {
-        collections_List = await getCollections()
-        const filtered = collections_List.filter(item => item.toLowerCase().includes(query));
-        filtered.forEach(item => {
-            const li = document.createElement("li");
-            li.textContent = item;
-            li.onclick = () => {
-                input.value = item;
-                suggestionList.innerHTML = ""; // Hide suggestions after selection
-            };
-            suggestionList.appendChild(li);
-        });
+        if (collections.includes(query)) {
+            availability.setAttribute('src','../public/icons/unavailable.png');
+            return;
+        } else {
+            availability.setAttribute('src','../public/icons/available.png');
+        }
     }
 }
 
@@ -502,8 +497,10 @@ function displayFileNames() {
         // Display the names of the selected files
         const fileNames = Array.from(files).map(file => file.name).join(', ');
         fileNamesText.textContent = fileNames; // Update the text with file names
+        fileNamesText.style.height = '64px'
     } else {
         fileNamesText.textContent = 'Drag the files or Paste the files'; // Default text
+        fileNamesText.style.height = '16px'
     }
 }
 
@@ -550,11 +547,15 @@ async function getCollections() {
             method: 'POST',
         });
         const result = await response.json();
+        collections = result.message;
         return result.message;
+
     } catch (error) {
         return [];
     }
 }
+
+
 
 async function getfileNames(collection) {
     const formData = new FormData();
