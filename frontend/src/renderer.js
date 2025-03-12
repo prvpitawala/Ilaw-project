@@ -178,7 +178,7 @@ window.onload = async function() {
         document.getElementById('user-button').innerHTML = `<font class="user-title">${profile.userName[0].toUpperCase()}${profile.userName[1]}</font>`;
         dashboard();
     } else {
-        loadUI("renderContainer","registerPages");
+        loadUI("renderContainer","registerPages");   
     }
 };
 
@@ -235,7 +235,10 @@ async function register() {
 
 async function setCollectionToUI() {
     collections_List = await getCollections()
-    document.getElementById('tagsContainer').innerHTML = collections_List.map(letter => `<div class="tag" onclick="messageSection('${letter}')">${letter}</div>\n`).join("") + `<div class="add-tag" onclick="addDocument()">+</div>`;
+    document.getElementById('tagsContainer').innerHTML = collections_List.map(letter => `<div class="tag" onclick="messageSection('${letter}')">${letter}</div>\n`).join("") + `<div class="add-tag show" id="addTag" onclick="addDocument()">+</div>`;
+    if (collections_List.length > 0) {
+        hideShow('addTag', 'hide');
+    } else {}
 }
 
 function showUserDropDown() {
@@ -256,7 +259,7 @@ async function dashboard() {
     loadUI("renderContainer","collection_selector");
     try {
         document.getElementById('fileList').innerHTML = '';
-        document.getElementById('sideContainer').style.width = '20%';
+        document.getElementById('sideContainer').style.width = '20%';    
     } catch (error) {}
     document.getElementById('bodeContainer').style.width = '60%';
     hideShow('userButtonDropbox','hide')
@@ -282,6 +285,8 @@ async function updateCollectionDocuments(event) {
     const clicktarget = event.currentTarget;
     const fileInput = document.getElementById('fileInput');
     collectionName = document.getElementById('chatTitle').innerText;
+
+    document.getElementsByClassName('upload-button')[0].innerHTML = `<img src="../public/icons/uploading.gif" class="collection-upload-lording-gif">`;
 
     if (!fileInput.files.length) {
         alert("Please select at least one file.");
@@ -507,6 +512,8 @@ function displayFileNames() {
 async function uploadDocument() {
     const fileInput = document.getElementById('fileInput');
     const collection = document.getElementById('collectionSelect').value;
+
+    document.getElementsByClassName('upload-button')[0].innerHTML = `<img src="../public/icons/uploading.gif" class="collection-upload-lording-gif">`;
 
     if (!fileInput.files.length) {
         alert("Please select at least one file.");
