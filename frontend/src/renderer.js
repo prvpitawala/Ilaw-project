@@ -188,7 +188,7 @@ function loadUI(section,UIname) {
     if (UIComponents[UIname]) {
         document.getElementById(section).innerHTML = UIComponents[UIname];
     } else {
-        alert(`UI element "${UIname}" not found.`);
+        //alert(`UI element "${UIname}" not found.`);
     }
 }
 
@@ -228,7 +228,7 @@ async function register() {
         dashboard();
     } catch (error) {
         console.error("Error uploading file:", error);
-        alert("Upload failed. See console for details.");
+        //alert("Upload failed. See console for details.");
         nextPage(1);
     }
 }
@@ -289,7 +289,7 @@ async function updateCollectionDocuments(event) {
     document.getElementsByClassName('upload-button')[0].innerHTML = `<img src="../public/icons/uploading.gif" class="collection-upload-lording-gif">`;
 
     if (!fileInput.files.length) {
-        alert("Please select at least one file.");
+        //alert("Please select at least one file.");
         return;
     }
     
@@ -313,11 +313,11 @@ async function updateCollectionDocuments(event) {
         if (response.ok) {
             backToMessage(myevent);  // Call dashboard function if upload is successful
         } else {
-            alert(`Upload failed: ${result.error}`);
+            //alert(`Upload failed: ${result.error}`);
         }
     } catch (error) {
         console.error("Error uploading files:", error);
-        alert("Upload failed. See console for details.");
+        //alert("Upload failed. See console for details.");
     }
 }
 
@@ -439,7 +439,7 @@ async function getProfile() {
 
     } catch (error) {
         console.error("Error fetching profile:", error);
-        alert("Failed to retrieve profile. See console for details.");
+        //alert("Failed to retrieve profile. See console for details.");
         return { userName: null, apiKey: null };
     }
 }
@@ -461,7 +461,7 @@ async function getProfileName() {
 
     } catch (error) {
         console.error("Error fetching profile:", error);
-        alert("Failed to retrieve profile. See console for details.");
+        //alert("Failed to retrieve profile. See console for details.");
         return { userName: null, apiKey: null };
     }
 }
@@ -516,7 +516,7 @@ async function uploadDocument() {
     document.getElementsByClassName('upload-button')[0].innerHTML = `<img src="../public/icons/uploading.gif" class="collection-upload-lording-gif">`;
 
     if (!fileInput.files.length) {
-        alert("Please select at least one file.");
+        //alert("Please select at least one file.");
         return;
     }
     
@@ -540,11 +540,11 @@ async function uploadDocument() {
         if (response.ok) {
             dashboard();  // Call dashboard function if upload is successful
         } else {
-            alert(`Upload failed: ${result.error}`);
+            //alert(`Upload failed: ${result.error}`);
         }
     } catch (error) {
         console.error("Error uploading files:", error);
-        alert("Upload failed. See console for details.");
+        //alert("Upload failed. See console for details.");
     }
 }
 
@@ -596,7 +596,7 @@ async function getDocument() {
         document.getElementById('resultDisplay').innerHTML = `<p>${result.message || result.error}</p>`;
     } catch (error) {
         console.error("Error uploading file:", error);
-        alert("Upload failed. See console for details.");
+        //alert("Upload failed. See console for details.");
     }
 }
 
@@ -610,7 +610,7 @@ async function getDatabase() {
         // document.getElementById('resultDisplay').innerHTML = `<p>${result.message || result.error}</p>`;
     } catch (error) {
         console.error("Error uploading file:", error);
-        alert("Upload failed. See console for details.");
+        //alert("Upload failed. See console for details.");
     }
 }
 
@@ -621,7 +621,7 @@ async function submitQuery() {
     const collection = document.getElementById('chatTitle').innerText; // or add separate collection selection if needed
 
     if (!query.trim()) {
-        alert("Please enter a query.");
+        //alert("Please enter a query.");
         return;
     }
 
@@ -640,7 +640,7 @@ async function submitQuery() {
         document.getElementById('resultDisplay').innerHTML = `${result.response || result.error}`;
     } catch (error) {
         console.error("Error submitting query:", error);
-        alert("Query failed. See console for details.");
+        //alert("Query failed. See console for details.");
     }
 }
 
