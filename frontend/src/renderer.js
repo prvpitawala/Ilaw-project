@@ -236,9 +236,6 @@ async function register() {
 async function setCollectionToUI() {
     collections_List = await getCollections()
     document.getElementById('tagsContainer').innerHTML = collections_List.map(letter => `<div class="tag" onclick="messageSection('${letter}')">${letter}</div>\n`).join("") + `<div class="add-tag show" id="addTag" onclick="addDocument()">+</div>`;
-    if (collections_List.length > 0) {
-        hideShow('addTag', 'hide');
-    } else {}
 }
 
 function showUserDropDown() {

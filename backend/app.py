@@ -1,16 +1,24 @@
+import time
+t_start = time.time()
 import hashlib
 from flask_cors import CORS
-import openai
+# import openai
 #backend
 import os
 import shutil
 from flask import Flask, request, jsonify
 import google.generativeai as genai
-from sentence_transformers import SentenceTransformer, CrossEncoder 
+from sentence_transformers import SentenceTransformer #, CrossEncoder 
 from utill import *
+print('library lorded time : ',time.time()-t_start)
+import sys
+import io
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 app = Flask(__name__)
 CORS(app)  # Allow cross-origin requests
+
 
 # In-memory document store
 # Structure: { collection_name: {doc name: document_content, ...} }
@@ -30,6 +38,11 @@ def initialize():
     global embedding_store
 
     BASE_SAVE_DIR = r"../files"
+
+    # Create directory if it doesn't exist
+    if not os.path.exists(BASE_SAVE_DIR):
+        os.makedirs(BASE_SAVE_DIR)
+
     remove_subdirectories(BASE_SAVE_DIR)
 
     # genai.configure(api_key='AIzaSyBfFtmf5-de0x0O3Tibyc4anGaioF4Uqj0')
@@ -329,13 +342,13 @@ def get_file_names():
     return jsonify({"message": file_name_list}), 200
 
 # Get Database Endpoint
-@app.route("/get/database", methods=["POST"])
-def get_database():
-    return jsonify({"message": f"""profile : name = {profile_data_store['userName']}
-                    password = {profile_data_store['password']}
-                    api key = {profile_data_store['apiKey']} 
-                    document : collections {[i for i in document_store.keys()]}
-                    {[f"collection : {i}, fils : {[f"name: {j},  content : {document_store[i][j]} " for j in document_store[i].keys()]}" for i in document_store.keys()]}"""}), 200
+# @app.route("/get/database", methods=["POST"])
+# def get_database():
+#     return jsonify({"message": f"""profile : name = {profile_data_store['userName']}
+#                     password = {profile_data_store['password']}
+#                     api key = {profile_data_store['apiKey']} 
+#                     document : collections {[i for i in document_store.keys()]}
+#                     {[f"collection : {i}, fils : {[f"name: {j},  content : {document_store[i][j]} " for j in document_store[i].keys()]}" for i in document_store.keys()]}"""}), 200
 
 
 
@@ -425,4 +438,4 @@ def query():
     return jsonify({"response": response}), 200
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000)
