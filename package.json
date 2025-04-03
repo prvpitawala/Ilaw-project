@@ -1,17 +1,52 @@
 {
-  "name": "frontend",
+  "name": "docnew",
   "version": "1.0.0",
   "main": "src/main.js",
+  "author": {
+      "name": "Raveen Pitawla",
+      "email": "raveenpitawala2244@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prvpitawala/Ilaw-project.git"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "package": "electron-builder --dir",
+    "make": "electron-builder"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "build": {
+    "appId": "com.ragdoc.id",
+    "productName": "Rag Doc System",
+    "copyright": "Copyright © 2025 Lumeo Labs",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/*",
+      "!dist/LICENSES.chromium.html",
+      "!dist/*.pak",
+      "!dist/d3dcompiler_47.dll",
+      "!dist/snapshot_blob.bin",
+      "!dist/v8_context_snapshot.bin"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true,
+      "artifactName": "${productName}-Setup-${version}.exe"
+    }
+  },
   "dependencies": {
-    "bootstrap": "^5.3.3",
-    "electron": "^34.3.1"
+    "bootstrap": "^5.3.3"
   },
-  "description": ""
+  "devDependencies": {
+    "electron": "^35.0.1",
+    "electron-builder": "^25.1.8"
+  }
 }
