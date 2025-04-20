@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "src/main.js",
   "author": {
-      "name": "Raveen Pitawla",
-      "email": "raveenpitawala2244@gmail.com"
+    "name": "Lumeo Labs",
+    "email": "raveenpitawala2244@gmail.com"
   },
   "license": "MIT",
   "repository": {
@@ -23,6 +23,7 @@
     "directories": {
       "output": "dist"
     },
+    "asar": false,
     "files": [
       "**/*",
       "!node_modules/*",
@@ -30,7 +31,15 @@
       "!dist/*.pak",
       "!dist/d3dcompiler_47.dll",
       "!dist/snapshot_blob.bin",
-      "!dist/v8_context_snapshot.bin"
+      "!dist/v8_context_snapshot.bin",
+      "!backend/*",
+      "!NSIS-Installer/*",
+      "!.env",
+      "!database/*",
+      "!build/*",
+      "!venv/*",
+      "!files/*",
+      "!app.spec"
     ],
     "win": {
       "target": "nsis"
@@ -46,7 +55,7 @@
     "bootstrap": "^5.3.3"
   },
   "devDependencies": {
-    "electron": "^35.0.1",
+    "electron": "^35.2.0",
     "electron-builder": "^25.1.8"
   }
 }

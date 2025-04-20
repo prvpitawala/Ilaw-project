@@ -1,6 +1,5 @@
 import hashlib
 from flask_cors import CORS
-#import openai
 #backend
 import os
 import shutil
@@ -8,40 +7,46 @@ from flask import Flask, request, jsonify
 import google.generativeai as genai
 from sentence_transformers import SentenceTransformer#, CrossEncoder 
 from utill import *
-# from pathlib import Path
 import sys
 import io
-import importlib
 
 import chromadb
-# import os
-# import zipfile
-# import tempfile
 import shutil
 from typing import List, Dict, Any, Tuple
 from tqdm import tqdm
 import openai
 from dotenv import load_dotenv
-# import chromadb
-# from langchain.text_splitter import RecursiveCharacterTextSplitter
-
+import dotenv as dt
 import requests
 import json
+# from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
+from flask import request, jsonify
 
 # from pdfminer.high_level import extract_text
+
+def get_app_data_dir():
+    app_data_dir = os.path.join(os.environ['APPDATA'], "Rag Doc System")
+    if not os.path.exists(app_data_dir):
+        os.makedirs(app_data_dir)
+    return app_data_dir
+
+def fileFolderPathGen(relativePath):
+    return os.path.join(get_app_data_dir(), relativePath)
+
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 app = Flask(__name__)
 CORS(app)  # Allow cross-origin requests
 
+chroma_client = chromadb.PersistentClient(path=fileFolderPathGen(r"database\.chroma_db"))
 # In-memory document store
 # Structure: { collection_name: {doc name: document_content, ...} }
 profile_data_store = {"userName": "", "password" : "", "geminiApiKey": "", "chatGPTApiKey": ""}
 document_store = {}
 doc_store = {}
-BASE_SAVE_DIR = r"../files"
-ENV_DIR = r"../.env"
+BASE_SAVE_DIR = fileFolderPathGen("files")# r"../files"
+ENV_DIR = fileFolderPathGen(".env") #r"../.env"
 #Structure : {collection_name: embedding,...}
 embedding_store = {}
 selectedLLMModel = "chatGPT"  #gemini / chatGPT
@@ -54,7 +59,7 @@ def initialize():
     global embedding_model
     global doc_store
     global embedding_store
-    global chroma_client
+    # global chroma_client
 
     # BASE_SAVE_DIR = r"../files"
     
@@ -68,13 +73,13 @@ def initialize():
     # genai.configure(api_key='AIzaSyBfFtmf5-de0x0O3Tibyc4anGaioF4Uqj0')
     # Load environment variables from .env file
     load_dotenv(dotenv_path=ENV_DIR)
-
     #genai.configure(api_key=profile_data_store['geminiApiKey']) 
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
+    # genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    genai.configure(api_key=dt.get_key(ENV_DIR,"GEMINI_API_KEY"))
     # Configure OpenAI API key
     # openai.api_key = profile_data_store['chatGPTApiKey']   
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    # openai.api_key = os.getenv("OPENAI_API_KEY")
+    openai.api_key = dt.get_key(ENV_DIR,"OPENAI_API_KEY")
      
     print(os.getenv("GEMINI_API_KEY"))
     print(os.getenv("OPENAI_API_KEY"))
@@ -114,7 +119,7 @@ def initialize():
 
     print("Step_3 : All the components are initialized\n")
 
-    chroma_client = chromadb.PersistentClient(path="../database/.chroma_db")
+    # chroma_client = chromadb.PersistentClient(path="../database/.chroma_db")
 
 def process_documents_and_save_embeddings(
         file_root,
@@ -305,31 +310,6 @@ def get_and_save_embedings(batch_size, chunks, embedding_model, chroma_client, c
             metadatas=metadatas
         )
 
-
-
-# def fileEmbeddings():
-#     # extract the documents from zip file.
-#     # BASE_SAVE_DIR = r"../files"
-#     text_files_list = read_text_files_from_directory(BASE_SAVE_DIR)
-#     print("Step_1 : Document extracted completed. \n")
-
-
-#     # add the text files into document list
-#     for subdir in text_files_list.keys():
-#         doc_store[subdir] = []
-#         for idx, content in enumerate(text_files_list[subdir]):
-#             doc_store[subdir].append(content)
-
-
-#     # length of the document
-#     print(f"Step_2 : Available documents count : {len(doc_store)} \n")
-
-#     for subdir in text_files_list.keys():    
-#         # Build the index using the document list
-#         index = build_index(doc_store[subdir], embedding_model)
-#         embedding_store[subdir] = index
-#         print(f"Step_3 :{subdir} Document indexing completed. \n")
-
 # Function to hash passwords
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -364,16 +344,30 @@ def upload_profile_document():
     profile_data_store['geminiApiKey'] = geminiApiKey
     profile_data_store['chatGPTApiKey'] = chatGPTApiKey
 
-    # load_dotenv()
     # os.putenv("OPENAI_API_KEY",profile_data_store['chatGPTApiKey'])
     # os.putenv("GEMINI_API_KEY",profile_data_store['geminiApiKey'])
-    if not os.path.exists(ENV_DIR):
-        os.makedirs(ENV_DIR)
-    env_dir = os.path.join(ENV_DIR)
-    with open(env_dir,'w') as dotenvFile:
-        dotenvFile.writelines(f"OPENAI_API_KEY={profile_data_store['chatGPTApiKey']}\n")
-        dotenvFile.writelines(f"GEMINI_API_KEY={profile_data_store['geminiApiKey']}\n")
+    
+    with open(ENV_DIR,'w') as dotenvFile:
+        pass
+    #     dotenvFile.writelines(f"OPENAI_API_KEY={profile_data_store['chatGPTApiKey']}\n")
+    #     dotenvFile.writelines(f"GEMINI_API_KEY={profile_data_store['geminiApiKey']}\n")
 
+    dt.set_key(ENV_DIR,"OPENAI_API_KEY",chatGPTApiKey)
+    dt.set_key(ENV_DIR,"GEMINI_API_KEY",geminiApiKey)
+
+    # Store user profile in ChromaDB
+    try:
+        collection = chroma_client.get_collection("llam_app_details")
+    except:
+        collection = chroma_client.create_collection("llam_app_details")
+        collection.add(
+            ids=['profile'],  # id must be unique
+            metadatas=[{
+                "userName": userName,
+                "password": hash_password(password)
+            }],
+            documents=[f"User profile for {userName}"]
+        )
 
     initialize()
 
@@ -391,23 +385,63 @@ def get_profile_document():
 # Get Profile Name Endpoint
 @app.route("/get/profile/name", methods=["POST"])
 def get_profile_name():
-    return jsonify({"message": {"userName":profile_data_store["userName"]}}), 200
+    try:
+        collection = chroma_client.get_collection("llam_app_details")
+        result = collection.get(ids=['profile'])
+
+        # Check if the result is valid and contains metadatas
+        if not result or "metadatas" not in result or not result["metadatas"]:
+            return jsonify({"error": "Profile not found"}), 404
+
+        user_name = result["metadatas"][0].get("userName")
+
+        if not user_name:
+            return jsonify({"error": "User name not available in profile data"}), 400
+
+        return jsonify({"message": {"userName": user_name}}), 200
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 # Get Profile APIKey Endpoint
 @app.route("/get/profile/api", methods=["POST"])
 def get_profile_api():
-    return jsonify({"message": {"geminiApiKey":profile_data_store["geminiApiKey"], "chatGPTApiKey":profile_data_store["chatGPTApiKey"]}}), 200
+    return jsonify({"message": {"geminiApiKey":dt.get_key(ENV_DIR,"GEMINI_API_KEY"), "chatGPTApiKey":dt.get_key(ENV_DIR,"OPENAI_API_KEY")}}), 200
 
 # Update Profile Name Endpoint
 @app.route("/update/profile/name", methods=["POST"])
 def update_profile_name():
-    userName = request.form.get("userName")
-    if not(userName):
-        return jsonify({"success": False, "error": "name are required"}), 400
-    
-    profile_data_store["userName"] = userName
+    try:
+        data = request.form
+        userName = data.get("userName") if data else None
+        if not userName:
+            return jsonify({"success": False, "error": "User name is required"}), 400
 
-    return jsonify({"success": True, "message": "Updated User Name"}), 200
+        collection = chroma_client.get_collection("llam_app_details")
+
+        # Retrieve the existing profile to preserve the password
+        result = collection.get(ids=['profile'])
+        if not result or not result["metadatas"]:
+            return jsonify({"success": False, "error": "Profile not found"}), 404
+
+        existing_metadata = result["metadatas"][0]
+        password = existing_metadata.get("password")
+
+        # Update the profile with the new username and existing password
+        collection.update(
+            ids=['profile'],
+            metadatas=[{
+                "userName": userName,
+                "password": password
+            }],
+            documents=[f"User profile for {userName}"]
+        )
+
+        return jsonify({"success": True, "message": "Updated User Name"}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An error occurred: {str(e)}"}), 500
+
 
 # Update Profile APIKey Endpoint
 @app.route("/update/profile/api", methods=["POST"])
@@ -419,38 +453,78 @@ def update_profile_api():
     
     profile_data_store["geminiApiKey"] = geminiApiKey
     profile_data_store["chatGPTApiKey"] = chatGPTApiKey
+    dt.set_key(ENV_DIR,"OPENAI_API_KEY",chatGPTApiKey)
+    dt.set_key(ENV_DIR,"GEMINI_API_KEY",geminiApiKey)
 
     return jsonify({"success": True, "message": "Updated User API Keys"}), 200
 
 # Update Profile Password Endpoint
+
 @app.route("/update/profile/password", methods=["POST"])
 def update_profile_password():
-    password = request.form.get("password")
-    repassword = request.form.get("repassword")
-    if password != repassword:
-        return jsonify({"success": False, "error": "password are not same"}), 400
-    
-    profile_data_store["password"] = hash_password(password)
+    try:
+        data = request.form
+        password = data.get("password") if data else None
+        repassword = data.get("repassword") if data else None
 
-    return jsonify({"success": True, "message": "Updated User Password"}), 200
+        if not password or not repassword:
+            return jsonify({"success": False, "error": "Both password fields are required"}), 400
+
+        if password != repassword:
+            return jsonify({"success": False, "error": "Passwords do not match"}), 400
+
+        collection = chroma_client.get_collection("llam_app_details")
+        result = collection.get(ids=['profile'])
+
+        if not result or not result["metadatas"]:
+            return jsonify({"success": False, "error": "Profile not found"}), 404
+
+        existing_metadata = result["metadatas"][0]
+        userName = existing_metadata.get("userName")
+
+        collection.update(
+            ids=['profile'],
+            metadatas=[{
+                "userName": userName,
+                "password": hash_password(password)
+            }],
+            documents=[f"User profile for {userName}"]
+        )
+
+        return jsonify({"success": True, "message": "Password updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"An error occurred: {str(e)}"}), 500
+
 
 # Check Password Endpoint
 @app.route('/check/password', methods=['POST'])
 def check_password():
     try:
-        data = request.get_json()  # Get JSON data from request
-        password = data.get("password")  # Extract password
+        data = request.get_json()
+        password = data.get("password") if data else None
 
         if not password:
             return jsonify({"success": False, "message": "Password is required"}), 400
 
-        if hash_password(password) == profile_data_store['password']:
+        collection = chroma_client.get_collection("llam_app_details")
+        result = collection.get(ids=['profile'])
+
+        if not result or not result["metadatas"]:
+            return jsonify({"success": False, "message": "Profile not found"}), 404
+
+        stored_password = result["metadatas"][0].get("password")
+        if not stored_password:
+            return jsonify({"success": False, "message": "Stored password missing"}), 500
+
+        if hash_password(password) == stored_password:
             return jsonify({"success": True, "message": "Password is correct"}), 200
         else:
             return jsonify({"success": False, "message": "Incorrect password"}), 401
 
     except Exception as e:
-        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+        return jsonify({"success": False, "message": f"An error occurred: {str(e)}"}), 500
+
 
 # Update LLM model Endpoint
 @app.route('/update/model/llm', methods=['POST'])
@@ -470,49 +544,6 @@ def update_model_llm():
 @app.route('/get/model/llm', methods=['POST'])
 def get_model_llm():
     return jsonify({"message": {"llm_model": selectedLLMModel}}), 200
-
-
-"""# Upload Document Endpoint
-@app.route("/upload/doc", methods=["POST"])
-def upload_document():
-    collection = request.form.get("collection")
-
-    # Ensure collection is provided
-    if not collection:
-        return jsonify({"error": "Collection is required"}), 400
-
-    # Initialize collection if it doesn't exist
-    if collection not in document_store:
-        document_store[collection] = {}
-
-    # Get all uploaded files
-    uploaded_files = request.files.getlist("files")
-
-    # Ensure at least one file is uploaded
-    if not uploaded_files:
-        return jsonify({"error": "No files were uploaded"}), 400
-
-
-    for file in uploaded_files:
-        file_name = file.filename
-        try:
-            # Read file content
-            content = file.read()
-            
-            # Check if it's a text file (attempt UTF-8 decoding)
-            try:
-                content_str = content.decode("utf-8")  # Text file
-            except UnicodeDecodeError:
-                content_str = "<Binary File>"  # Mark as binary file
-
-            # Save content in the collection
-            document_store[collection][file_name] = content_str
-
-        except Exception as e:
-            return jsonify({"error": f"Could not process file {file_name}: {e}"}), 400
-        
-    return jsonify({"message": f"Uploaded {len(uploaded_files)} files to {collection}"}), 200
-"""
 
 # Upload Document Endpoint
 @app.route("/upload/doc", methods=["POST"])
@@ -557,7 +588,6 @@ def upload_document():
 
     return jsonify({"message": f"Uploaded {len(saved_files)} files to '{collection}'", "files": saved_files}), 200
 
-#update document endpoint
 @app.route("/update/doc", methods=["POST"])
 def update_document():
     # BASE_SAVE_DIR = r"../files"
@@ -618,16 +648,6 @@ def get_document():
 
     return jsonify({"message": f"filename:{fileName}, collection :{collection},content :{content}"}), 200
 
-"""# Get Document Collections Endpoint
-@app.route("/get/document/collections", methods=["POST"])
-def get_document_collections():
-    if not document_store:  # Correctly checks if the dictionary is empty
-        return jsonify({"message": []}), 200
-
-    return jsonify({"message": list(document_store.keys())}), 200
-
-"""
-
 # Get Document Collections Endpoint
 @app.route("/get/document/collections", methods=["POST"])
 def get_document_collections():
@@ -635,26 +655,78 @@ def get_document_collections():
     # BASE_SAVE_DIR = r"../files"
     if not os.path.exists(BASE_SAVE_DIR):
         return jsonify({"message": []}), 200
+    
+    db_collections = chroma_client.list_collections()
 
     # Get list of collections (subdirectories inside BASE_SAVE_DIR)
-    collections = [name for name in os.listdir(BASE_SAVE_DIR) if os.path.isdir(os.path.join(BASE_SAVE_DIR, name))]
+    # file_collections = [name for name in os.listdir(BASE_SAVE_DIR) if os.path.isdir(os.path.join(BASE_SAVE_DIR, name))]
 
-    return jsonify({"message": collections}), 200
+    #create folders if not exist
+    collection_list = []
+    for collection in db_collections:
+        if collection.name != "llam_app_details":
+            collection_name = collection.name
+            collection_path = os.path.join(BASE_SAVE_DIR, collection_name)
+            collection_list.append(collection_name)
+            if not os.path.exists(collection_path):
+                os.makedirs(collection_path)
+
+    return jsonify({"message": collection_list}), 200
+
+@app.route("/delete/document/collection", methods=["POST"])
+def delete_document_collection():
+    # Ensure the base directory exists
+    # BASE_SAVE_DIR = r"../files"
+    if not os.path.exists(BASE_SAVE_DIR):
+        return jsonify({"message": []}), 200
+
+    collection = request.form.get("collection")
+    
+    # Ensure the collection name is provided
+    if not collection:
+        return jsonify({"error": "Collection name is required"}), 400
+
+    collection_path = os.path.join(BASE_SAVE_DIR, collection)
+
+    # Check if the collection folder exists
+    if not os.path.exists(collection_path) or not os.path.isdir(collection_path):
+        return jsonify({"error": "Collection does not exist"}), 400
+
+    # Remove the collection directory
+    shutil.rmtree(collection_path)
+    # Clear the corresponding database in ChromaDB
+    clear_chroma_database(chroma_client, collection)
+    
+    return jsonify({"message": f"Deleted collection '{collection}'"}), 200
+
+@app.route("/delete/document/files", methods=["POST"])
+def delete_document_files():
+    # Ensure the base directory exists
+    # BASE_SAVE_DIR = r"../files"
+    if not os.path.exists(BASE_SAVE_DIR):
+        return jsonify({"message": []}), 200
+
+    collection = request.form.get("collection")
+    fileName = request.form.get("fileName")
+    
+    # Ensure the collection name is provided
+    if not (collection and fileName):
+        return jsonify({"error": "Collection name and File name is required"}), 400
+
+    collection_path = os.path.join(BASE_SAVE_DIR, collection)
+    file_path = os.path.join(collection_path, fileName)
+    # Check if the collection file exists
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        return jsonify({"error": "File does not exist"}), 400
+
+    # Remove the file
+    os.remove(file_path)
+    # Clear the corresponding database in ChromaDB
+    numberofdeletefiles=remove_data_by_filenames(chroma_client,collection,[fileName])
+    
+    return jsonify({"message": f"Deleted file '{fileName}, {numberofdeletefiles}'"}), 200
 
 # Get File names
-
-"""@app.route("/get/document/filenames", methods=["POST"])
-def get_file_names():
-    collection = request.form.get("collection")
-    if not document_store:  # Correctly checks if the dictionary is empty
-        return jsonify({"message": []}), 200
-    if not document_store[collection]:  # Correctly checks if the collection is empty
-        return jsonify({"message": []}), 200
-    fileNameList = list(document_store[collection].keys())
-    print("file name is ",fileNameList)
-    return jsonify({"message": fileNameList}), 200
-"""
-
 @app.route("/get/document/filenames", methods=["POST"])
 def get_file_names():
     # BASE_SAVE_DIR = r"../files"
@@ -702,12 +774,17 @@ def get_response(quaryText, collection):
         # Retrive relevent documents 
         print("----------------")
         print(f"{collection}")
-        retrived_doc_list = retrieve_relevant_documents(
-            chroma_client=chroma_client,
-            collection_name=collection,
-            embedding_model=embedding_model,
-            query=quaryText, 
-            top_k=5)
+        try:
+            retrived_doc_list = retrieve_relevant_documents(
+                chroma_client=chroma_client,
+                collection_name=collection,
+                embedding_model=embedding_model,
+                query=quaryText, 
+                top_k=5
+            )
+        except openai.APIConnectionError as e:
+            return "Error: Connection failed"
+
             
         print(f"\nFound {len(retrived_doc_list)} relevant documents\n")
         # retrived_doc_list = retrieve_documents(user_message, embedding_store[collection], embedding_model, doc_store[collection],  2)
@@ -775,4 +852,10 @@ def query():
     return jsonify({"response": response}), 200
 
 if __name__ == "__main__":
-    app.run(debug=False, port=5000)
+    try:
+        app.run(debug=False, port=5000)
+    except Exception as e:
+        import traceback
+        with open("error_log.txt", "w", encoding="utf-8") as f:
+            f.write(traceback.format_exc())
+        input("An error occurred. Press Enter to exit...")

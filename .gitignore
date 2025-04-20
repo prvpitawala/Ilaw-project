@@ -1,8 +1,8 @@
-models
 files
-__pycache__
-
-
-backend/env
-frontend/node_modules
+venv
+node_modules
 .env
+
+build/app
+backend/__pycache__
+frontend/node_modules

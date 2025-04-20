@@ -20,12 +20,30 @@ const UIComponents = {
         <h3>API Key</h3>
         <div class="register-page-input-container">
             <input type="text" id="chatgptApiKeyInput" placeholder="Enter ChatGPT API Key (requirde)">
-            <input type="text" id="geminiApiKeyInput" placeholder="Enter Gemini API Key (optional)">
+            <input type="text" id="geminiApiKeyInput" placeholder="Enter Gemini API Key (optional)" style="display:none;">
         </div>
         <button onclick="register()">Sign Up</button>
     </div>`,
     collection_selector:`
+    <div class="tags-title">Collections</div>
     <div class="tags-container" id="tagsContainer"></div>`,
+    collection_delete_section: `
+    <section class="collection-delete-section">
+        <div class="collection-delete-section-container">
+            <div class="back-button" id="backButton" data="collection-delete-section" onclick="backTo(event)">
+                <img src="../public/icons/back-icon.png" class="back-button-img" alt="back">
+            </div>
+            <div class="collection-delete-container">
+                <div class="collection-delete-btn-container">   
+                    <font class="collection-delete-btn-title">Confarm delete</font>
+                    <div class="collection-delete-btn-action-container">
+                        <button del-data='yes' class='collection-delete-action-btn'>Yes</button>
+                        <button del-data='no' class='collection-delete-action-btn'>No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>`,
     userbutton:`
     <div class="user-button-section">
         <div id="user-button" onclick="showUserDropDown()"></div>
@@ -46,7 +64,7 @@ const UIComponents = {
                 
                 <input type="file" id="fileInput" style="display: none;" multiple onchange="displayFileNames()">
             </div>
-            <div class="file-format">Supported file format (Text)</div>
+            <div class="file-format">Supported file format (txt, PDF, DOCX, ODT)</div>
         </div>
         <div class="collection-name-section">
             <div class="label">Collection Name</div>
@@ -55,7 +73,6 @@ const UIComponents = {
         </div>
         <button class="upload-button" ID="docUplordSectionUplordButton" onclick="uploadDocument()">Upload</button>
     </div>`,
-
     sidebar:`
     <div class="sidebar show" id="sideBar">
         <div class="back-btn-sec">
@@ -66,7 +83,6 @@ const UIComponents = {
             <button onclick="collectionDocumentUpdateSection()" class="chat-section-document-add-btn"> + </button>
         </div>
     </div>`,
-
     mainChat: `
     <div class="main-content">
         <div class="chatHeader">
@@ -185,7 +201,7 @@ const UIComponents = {
                 <div class="Authontication-password-container">   
                     <font class="Authontication-password-title">Password</font>
                     <div class="Authontication-password-input-container">
-                        <input type="text" id="checkpasswordInput" placeholder="Enter Password" class="Authontication-password-input">
+                        <input type="password" id="checkpasswordInput" placeholder="Enter Password" class="Authontication-password-input">
                     </div>
                     <button id="athonticationPasswordSubmit" onclick="userDataEditSection(event)">Next</button>
                 </div>
@@ -240,9 +256,9 @@ const UIComponents = {
                     <font class="password-edit-title">Edit Password</font>
                     <div class="password-edit-input-container">
                         <font class="password-edit-input-title">Enter Password</font>
-                        <input type="text" id="passwordEditInput" class="password-edit-input">
+                        <input type="password" id="passwordEditInput" class="password-edit-input">
                         <font class="password-edit-input-title">Re Enter Password</font>
-                        <input type="text" id="passwordEditReInput" class="password-edit-input">
+                        <input type="password" id="passwordEditReInput" class="password-edit-input">
                     </div>
                     <button id="userPasswordEditButton">Update</button>
                 </div>
@@ -263,7 +279,7 @@ const UIComponents = {
                         <div class="file-text" id="fileNamesText">Drag the files or Paste the files</div>
                         <input type="file" id="fileInput" style="display: none;" multiple onchange="displayFileNames()">
                     </div>
-                    <div class="file-format">Supported file format (Text)</div>
+                    <div class="file-format">Supported file format (txt, PDF, DOCX, ODT)</div>
                 </div>
                 <div>
                     <div class="label">Collection Name</div>
@@ -276,12 +292,19 @@ const UIComponents = {
 };
 
 var collections;
+var curruntpage; //'dashbord','message','userSetting'
+var previouspage;
+function pageUpdater(cPage) {
+    previouspage = curruntpage;
+    curruntpage = cPage;
+}
 
 window.onload = async function() {
-    profile = await getProfile();
+    profile = await isHaveProfile();
     
-    if (profile.userName || profile.apiKey) {
-        document.getElementsByTagName('body')[0].innerHTML += UIComponents.userbutton;
+    if (profile.exists) {
+        document.body.insertAdjacentHTML('beforeend', UIComponents.userbutton);
+        // document.getElementsByTagName('body')[0].innerHTML += UIComponents.userbutton;
         document.getElementById('user-button').innerHTML = `<font class="user-title">${profile.userName[0].toUpperCase()}${profile.userName[1]}</font>`;
         dashboard();
     } else {
@@ -334,7 +357,8 @@ async function register() {
         });
         const result = await response.json();
         username = (await getProfile()).userName;
-        document.getElementsByTagName('body')[0].innerHTML += UIComponents.userbutton;
+        document.body.insertAdjacentHTML('beforeend', UIComponents.userbutton);
+        // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
         document.getElementById('user-button').innerHTML = `<font class="user-title">${username[0].toUpperCase()}${username[1]}</font>`;
         dashboard();
     } catch (error) {
@@ -345,8 +369,69 @@ async function register() {
 }
 
 async function setCollectionToUI() {
-    collections_List = await getCollections()
-    document.getElementById('tagsContainer').innerHTML = collections_List.map(letter => `<div class="tag" onclick="messageSection('${letter}')">${letter}</div>\n`).join("") + `<div class="add-tag show" id="addTag" onclick="addDocument()">+</div>`;
+    const collections_List = await getCollections();
+
+    document.getElementById('tagsContainer').innerHTML = 
+        collections_List.map(letter => `
+            <div class="tag" data-letter="${letter}">
+                <div class="collection-dropbox hide">
+                    <div class="user-button-dropbox-item">Delete</div>     
+                </div>
+                <font>${letter}</font>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    xmlns="http://www.w3.org/2000/svg" class="tag-icon-md" style="display: none;">
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                        d="M3 12C3 10.8954 3.89543 10 5 10C6.10457 10 7 10.8954 7 12C7 13.1046 6.10457 14 5 14C3.89543 14 3 13.1046 3 12ZM10 12C10 10.8954 10.8954 10 12 10C13.1046 10 14 10.8954 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12ZM17 12C17 10.8954 17.8954 10 19 10C20.1046 10 21 10.8954 21 12C21 13.1046 20.1046 14 19 14C17.8954 14 17 13.1046 17 12Z"
+                        fill="currentColor"></path>
+                </svg>
+            </div>
+        `).join("") 
+        + `<div class="add-tag show" id="addTag" onclick="addDocument()"><span class="add-tag-title" title="Create new file collection">+</span></div>`;
+
+    // Add event listeners to each tag
+    const tagElements = Array.from(document.getElementsByClassName("tag"));
+
+    tagElements.forEach(tag => {
+        const icon = tag.querySelector('.tag-icon-md');
+        const dropbox = tag.querySelector('.collection-dropbox');
+        const deleteBtn = tag.querySelector('.user-button-dropbox-item');
+        const letter = tag.dataset.letter;
+
+        // Hover to show/hide icon
+        tag.addEventListener("mouseover", () => {
+            icon.style.display = 'block';
+        });
+
+        tag.addEventListener("mouseout", () => {
+            icon.style.display = 'none';
+        });
+
+        // Click icon to toggle dropbox
+        icon.addEventListener("click", (e) => {
+            e.stopPropagation(); // Prevent bubbling to outer click
+            document.querySelectorAll('.collection-dropbox').forEach(box => {
+                if (box !== dropbox) {
+                    if (box.classList.contains('show')) {
+                        box.classList.replace('show', 'hide');
+                    }
+                }
+            });
+
+            dropbox.classList.toggle('hide');
+            dropbox.classList.toggle('show');
+        });
+
+        // Click delete option
+        deleteBtn.addEventListener("click", async (e) => {
+            e.stopPropagation(); // In case there's outer click handling
+            await collectionDeleteSection(letter);
+        });
+
+        // Optional: clicking anywhere else on tag runs messageSection()
+        tag.addEventListener("click", () => {
+            messageSection(letter);
+        });
+    });
 }
 
 function showUserDropDown() {
@@ -362,8 +447,53 @@ function showUserDropDown() {
     }
 }
 
+async function collectionDeleteSection(letter) {
+    document.body.insertAdjacentHTML('beforeend', UIComponents.collection_delete_section);
+    // document.getElementsByTagName('body')[0].innerHTML += UIComponents.co;
+    const colldeleteBtn = Array.from(document.getElementsByClassName("collection-delete-action-btn"));
+    colldeleteBtn.forEach(actBtn => {
+        actBtn.addEventListener('click', async () => {
+            const deleteData = actBtn.getAttribute('del-data');
+            if (deleteData === 'yes') {
+                await deleteCollection(letter);
+                var Section = document.querySelector(`.collection-delete-section`);
+                if (Section) {
+                    Section.parentNode.removeChild(Section);
+                }
+            } else {
+                var Section = document.querySelector(`.collection-delete-section`);
+                if (Section) {
+                    Section.parentNode.removeChild(Section);
+                }
+            }
+        });
+    });
+}
+
+async function deleteCollection(letter) {
+    try {
+        const formData = new FormData();
+        formData.append('collection', letter);
+
+        const response = await fetch('http://127.0.0.1:5000/delete/document/collection', {
+            method: 'POST',
+            body: formData,  // Send FormData directly (DO NOT use JSON.stringify)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            dashboard()
+            return  // Call dashboard function if upload is successful
+        }
+    } catch (error) {
+        console.error("Error uploading files:", error);
+    }
+}
+
 async function dashboard() {
     hideShow('sideContainer','hide');
+    // pageUpdater('dashbord');
     loadUI("renderContainer","collection_selector");
     try {
         document.getElementById('fileList').innerHTML = '';
@@ -416,7 +546,9 @@ async function getLLMModel() {
 }
 
 async function setting() {
-    document.getElementsByTagName('body')[0].innerHTML += UIComponents.userSettingSection;
+    // pageUpdater('userSetting');
+    document.body.insertAdjacentHTML('beforeend', UIComponents.userSettingSection);
+    // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
     username = (await getProfileName()).userName;
     document.getElementById('settingDefaltUserPic').innerHTML = `${username[0].toUpperCase()}${username[1]}`;
 
@@ -456,7 +588,8 @@ async function setting() {
             // const modTyp = swh.parentElement.getAttribute('data');
             const swhMod = swh.getAttribute('model-data')
             
-            updateLlmModel(swhMod);
+            // updateLlmModel(swhMod);
+            updateLlmModel("chatGPT");
 
             swh.parentElement.querySelector('.switch-head').classList.remove('inactive');
             swh.parentElement.querySelector('.switch-head').classList.remove('active');
@@ -466,7 +599,8 @@ async function setting() {
 }
 
 async function collectionDocumentUpdateSection() {
-    document.getElementsByTagName('body')[0].innerHTML += UIComponents.collectionDocuentUpdataSection;
+    document.body.insertAdjacentHTML('beforeend', UIComponents.collectionDocuentUpdataSection);
+    // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
     collectionName = document.getElementById('chatTitle').innerText;
     document.getElementById('collectionName').innerText = collectionName;
 }
@@ -520,6 +654,23 @@ function backTo(event) {
         Section.parentNode.removeChild(Section);
     }
     hideShow('userButtonDropbox','hide');
+    // switch (previouspage) {
+    //     case 'dashbord':
+    //         dashboard();
+    //         break;
+    //     case 'userSetting':
+    //         setting();
+    //         break;
+    //     case 'message':
+    //         try {
+    //             document.getElementById('messageInput').addEventListener("keypress", function(event) {
+    //                 if (event.key === "Enter") {
+    //                     submitQuery();
+    //                 }
+    //             });
+    //         } catch {}
+    //         break;
+    // };
     try {
         document.getElementById('messageInput').addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
@@ -567,7 +718,8 @@ async function userDataEditSection(event) {
 }
 
 function userNameEditSection() {
-    document.getElementsByTagName('body')[0].innerHTML += UIComponents.userNameEditSection;
+    document.body.insertAdjacentHTML('beforeend', UIComponents.userNameEditSection);
+    // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
     document.getElementById("userNameEditButton").addEventListener("click", async () => {
         try {
             const userName = document.getElementById("nameEditInput").value;
@@ -604,7 +756,8 @@ function userNameEditSection() {
 }
 
 async function userAPIKeyEditSection() {
-    document.getElementsByTagName('body')[0].innerHTML += UIComponents.userAPIKeyEditSection;
+    document.body.insertAdjacentHTML('beforeend', UIComponents.userAPIKeyEditSection);
+    // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
     const apiData = await getProfileAPI()
     document.getElementById('geminiapikeyEditInput').value = apiData.geminiApiKey;
     document.getElementById('chatGPTapikeyEditInput').value = apiData.chatGPTApiKey;
@@ -612,7 +765,7 @@ async function userAPIKeyEditSection() {
         try {
             const geminiApiKey = document.getElementById('geminiapikeyEditInput').value;
             const chatGPTApiKey = document.getElementById('chatGPTapikeyEditInput').value;
-            if(geminiApiKey) {
+            if(geminiApiKey || chatGPTApiKey) {
                 const formData = new FormData();
                 formData.append('geminiApiKey', geminiApiKey);
                 formData.append('chatGPTApiKey', chatGPTApiKey);
@@ -643,7 +796,8 @@ async function userAPIKeyEditSection() {
 }
 
 function userPasswordEditSection() {
-    document.getElementsByTagName('body')[0].innerHTML += UIComponents.userPasswordEditSection;
+    document.body.insertAdjacentHTML('beforeend', UIComponents.userPasswordEditSection);
+    // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
     document.getElementById("userPasswordEditButton").addEventListener("click", async () => {
         try {
             const password = document.getElementById('passwordEditInput').value;
@@ -680,7 +834,8 @@ function userPasswordEditSection() {
 function passwordAutonticationSection(event) {
     let clickedElement = event.currentTarget;
     let userData = clickedElement.getAttribute("data");
-    document.getElementsByTagName('body')[0].innerHTML += UIComponents.userAuthonticationSection;
+    document.body.insertAdjacentHTML('beforeend', UIComponents.userAuthonticationSection);
+    // document.getElementsByTagName('body')[0].innerHTML += UIComponents.userAuthonticationSection;
     document.getElementById('athonticationPasswordSubmit').setAttribute('data',userData);
 }
 
@@ -694,6 +849,7 @@ function getFileExtension(filename) {
 }
 
 async function messageSection(collectionName) {
+    pageUpdater('message');
     hideShow('sideContainer','show');
     hideShow('userButtonDropbox','hide');
     loadUI("renderContainer","mainChat");
@@ -701,9 +857,18 @@ async function messageSection(collectionName) {
     document.getElementById('chatTitle').innerHTML = collectionName;
     fileList = await getfileNames(collectionName);
     document.getElementById('fileList').innerHTML = fileList.map(file => `
-        <li class="file-item" onclick="fileview('${file}')">
-        <img src="../public/icons/${getFileExtension(file)}.png" class="file-extention-img" alt="${getFileExtension(file)}-file">
-        <font class="file-title">${file}</font>
+        <li class="file-item" data-letter="${file}">
+            <img src="../public/icons/${getFileExtension(file)}.png" class="file-extention-img" alt="${getFileExtension(file)}-file">
+            <span class="file-title" title="${file}">${file}</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                xmlns="http://www.w3.org/2000/svg" class="file-icon-md" style="display: none;">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                    d="M3 12C3 10.8954 3.89543 10 5 10C6.10457 10 7 10.8954 7 12C7 13.1046 6.10457 14 5 14C3.89543 14 3 13.1046 3 12ZM10 12C10 10.8954 10.8954 10 12 10C13.1046 10 14 10.8954 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12ZM17 12C17 10.8954 17.8954 10 19 10C20.1046 10 21 10.8954 21 12C21 13.1046 20.1046 14 19 14C17.8954 14 17 13.1046 17 12Z"
+                    fill="currentColor"></path>
+            </svg>
+            <div class="file-dropbox hide">
+                <div class="user-button-dropbox-item">Delete</div>     
+            </div>
         </li>\n
         `).join("");
     document.getElementById('messageBox').innerHTML = `<input type="text" class="messageInput" id="messageInput" placeholder="Type your question" onclick="this.focus()">` + document.getElementById('messageBox').innerHTML;
@@ -713,6 +878,100 @@ async function messageSection(collectionName) {
             submitQuery();
         }
     });
+
+    // Add event listeners to each tag
+    const fileElements = Array.from(document.getElementsByClassName("file-item"));
+
+    fileElements.forEach(fileEL => {
+        const icon = fileEL.querySelector('.file-icon-md');
+        const dropbox = fileEL.querySelector('.file-dropbox');
+        const deleteBtn = fileEL.querySelector('.user-button-dropbox-item');
+        const filename = fileEL.dataset.letter;
+
+        // Hover to show/hide icon
+        fileEL.addEventListener("mouseover", () => {
+            icon.style.display = 'block';
+        });
+
+        fileEL.addEventListener("mouseout", () => {
+            icon.style.display = 'none';
+        });
+
+        // Click icon to toggle dropbox
+        icon.addEventListener("click", (e) => {
+            e.stopPropagation(); // Prevent bubbling to outer click
+            document.querySelectorAll('.collection-dropbox').forEach(box => {
+                if (box !== dropbox) {
+                    if (box.classList.contains('show')) {
+                        box.classList.replace('show', 'hide');
+                    }
+                }
+            });
+
+            dropbox.classList.toggle('hide');
+            dropbox.classList.toggle('show');
+        });
+
+        // Click delete option
+        deleteBtn.addEventListener("click", async (e) => {
+            e.stopPropagation(); // In case there's outer click handling
+            await fileDeleteSection(filename,collectionName);
+        });
+
+        // Optional: clicking anywhere else on tag runs messageSection()
+        fileEL.addEventListener("click", () => {
+            // messageSection(letter); file view funcion
+        });
+    });
+}
+
+async function fileDeleteSection(filename,collectionname) {
+    document.body.insertAdjacentHTML('beforeend', UIComponents.collection_delete_section);
+    // document.getElementsByTagName('body')[0].innerHTML += UIComponents.co;
+    const colldeleteBtn = Array.from(document.getElementsByClassName("collection-delete-action-btn"));
+    colldeleteBtn.forEach(actBtn => {
+        actBtn.addEventListener('click', async () => {
+            const deleteData = actBtn.getAttribute('del-data');
+            if (deleteData === 'yes') {
+                await deleteFile(filename,collectionname);
+                var Section = document.querySelector(`.collection-delete-section`);
+                if (Section) {
+                    Section.parentNode.removeChild(Section);
+                }
+                return;
+            } else {
+                var Section = document.querySelector(`.collection-delete-section`);
+                if (Section) {
+                    Section.parentNode.removeChild(Section);
+                }
+                return;
+            }
+        });
+    });
+}
+
+async function deleteFile(filename,collectionname) {
+    try {
+        const formData = new FormData();
+        formData.append('collection', collectionname);
+        formData.append('fileName', filename);
+        console.log("fileName: ",filename)
+        const response = await fetch('http://127.0.0.1:5000/delete/document/files', {
+            method: 'POST',
+            body: formData,  // Send FormData directly (DO NOT use JSON.stringify)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log(result);
+            return messageSection(collectionname);
+              // Call dashboard function if upload is successful
+        }
+    } catch (error) {
+        console.error("Error uploading files:", error);
+        return;
+    }
 }
 
 function sideBar(visibility){
@@ -796,6 +1055,43 @@ async function getProfileName() {
         console.error("Error fetching profile:", error);
         //alert("Failed to retrieve profile. See console for details.");
         return { userName: null, apiKey: null };
+    }
+}
+
+async function isHaveProfile() {
+    try {
+        const response = await fetch("http://127.0.0.1:5000/get/profile/name", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return {
+                exists: true,
+                userName: data.message.userName
+            };
+        } else if (response.status === 404) {
+            return {
+                exists: false,
+                userName: null
+            };
+        } else {
+            const errorData = await response.json();
+            console.error("Error:", errorData.error || "Unknown error");
+            return {
+                exists: false,
+                error: errorData.error || "Unexpected error"
+            };
+        }
+    } catch (err) {
+        console.error("Request failed:", err);
+        return {
+            exists: false,
+            error: "Network error or server is unreachable"
+        };
     }
 }
 
@@ -993,4 +1289,3 @@ async function submitQuery() {
         //alert("Query failed. See console for details.");
     }
 }
-

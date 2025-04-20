@@ -1,215 +1,4 @@
-import pandas as pd
-import zipfile
-import faiss
-import time
-from functools import partial
-from multiprocessing import Pool, cpu_count
-import numpy as np
 import re
-from multiprocessing.pool import ThreadPool
-import os
-
-
-
-# This function for get the chatHistory as text
-def get_chat_as_text(chat_history):
-    chat_text = ""
-    for chat in chat_history[-6:]:
-        for role, message in chat.items():
-            chat_text += f"{role}: {message}\n"
-    return chat_text
-
-# this is for update the csv file
-def update_csv(file_path, new_data):
-    # Read the existing CSV file
-    try:
-        df = pd.read_csv(file_path)
-    except FileNotFoundError:
-        # If the file doesn't exist, create a new DataFrame with columns
-        df = pd.DataFrame(columns=['ChatHistory', 'Response'])
-
-    # Convert new data to DataFrame
-    new_df = pd.DataFrame(new_data, columns=['ChatHistory', 'Response'])
-
-    # Append the new data
-    updated_df = pd.concat([df, new_df], ignore_index=True)
-
-    # Save back to the same CSV file
-    updated_df.to_csv(file_path, index=False)
-    print(f"CSV file updated")
-
-
-# Function to extract and read text files from a zip file
-def extract_and_read_zip(zip_file_path):
-    # List to store the contents of all text files
-    text_files_content = []
-
-    # Extract the zip file
-    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-        # Get the list of all files inside the zip
-        zip_ref.extractall()  # Extracts to the current directory
-        for file_name in zip_ref.namelist():
-            # Check if the file is a text file
-            if file_name.endswith('.txt'):
-                # Open and read the text file
-                with open(file_name, 'r', encoding='utf-8') as file:
-                    content = file.read()
-                    text_files_content.append(content)
-
-    return text_files_content
-
-
-def read_text_files_from_directory(directory_path):
-    text_files_content = {}
-
-    # Iterate through subdirectories (e.g., 'car', 'van')
-    for subdir in os.listdir(directory_path):
-        subdir_path = os.path.join(directory_path, subdir)
-
-        # Check if it's a directory
-        if os.path.isdir(subdir_path):
-            subdir_texts = []  # List to store text file contents for this subdir
-            
-            # Iterate through files in the subdirectory
-            for file_name in os.listdir(subdir_path):
-                file_path = os.path.join(subdir_path, file_name)
-
-                # Check if it's a text file
-                if os.path.isfile(file_path) and file_name.endswith('.txt'):
-                    with open(file_path, 'r', encoding='utf-8') as file:
-                        subdir_texts.append(file.read())
-
-            # Store the text content in the dictionary
-            text_files_content[subdir] = subdir_texts
-
-    return text_files_content
-
-
-
-# this function for build the index
-def build_index(documents, model):
-    # Encode the documents into embeddings
-    #global doc_embeddings
-    doc_embeddings = model.encode(documents, convert_to_tensor=True, clean_up_tokenization_spaces=True)
-
-    # Convert to NumPy array and build the Faiss index
-    doc_embeddings_np = doc_embeddings.cpu().numpy()
-    index = faiss.IndexFlatL2(doc_embeddings_np.shape[1])  # Using L2 distance
-    index.add(doc_embeddings_np)  # Add document embeddings to the index
-    return index
-
-
-# THis function for score the documents 
-def score_document(pair, model):
-    # Use the provided model to predict relevance score for the query-document pair
-    return model.predict([pair])[0]  # Assuming predict returns a list
-
-
-def re_rank_documents_02(query, retrieved_docs, model, batch_size=32):
-    # set timer
-    print('Start')
-    start_time = time.time()
-    
-    # Pair the query with each retrieved document
-    query_doc_pairs = [[query, doc] for doc in retrieved_docs]
-
-    # Create a partial function with the model passed in as a fixed argument
-    score_document_with_model = partial(score_document, model=model)
-
-    # Use multiprocessing Pool to parallelize the scoring across multiple CPU cores
-    with Pool(cpu_count()) as pool:
-        relevance_scores = pool.map(score_document_with_model, query_doc_pairs, chunksize=batch_size)
-    
-    # Convert to numpy array for efficient sorting
-    relevance_scores = np.array(relevance_scores)
-
-    # Sort documents based on relevance scores
-    sorted_doc_indices = np.argsort(-relevance_scores)  # negative for descending order
-
-    
-    time_duration = time.time() - start_time
-    print('end')
-    print("rerank duration : ", time_duration)
-
-    # Return documents in re-ranked order
-    return [retrieved_docs[i] for i in sorted_doc_indices]
-
-
-# Modified re-rank_documents function
-def re_rank_documents_01(query, retrieved_docs, model):
-
-    # set timer
-    start_time = time.time()
-
-    # Pair the query with each retrieved document based on its index
-    query_doc_pairs = [[query, doc] for doc in retrieved_docs]
-
-    # Use the cross-encoder to score each query-document pair
-    relevance_scores = model.predict(query_doc_pairs)
-
-    # Sort the documents based on the relevance scores (higher is better)
-    sorted_doc_indices = sorted(range(len(retrieved_docs)), key=lambda i: relevance_scores[i], reverse=True)
-
-    time_duration = time.time() - start_time
-    print("rerank duration : ", time_duration)
-
-    # Return the document indices in re-ranked order
-    return [retrieved_docs[i] for i in sorted_doc_indices]
-
-
-
-
-def re_rank_documents_03(query, retrieved_docs, model, batch_size=32):
-
-    query_doc_pairs = [[query, doc] for doc in retrieved_docs]
-    score_document_with_model = partial(score_document, model=model)
-
-    # Using ThreadPool instead of Pool
-    num_threads = min(cpu_count(), len(query_doc_pairs) // batch_size)
-
-    with ThreadPool(num_threads) as pool:
-        relevance_scores = pool.map(score_document_with_model, query_doc_pairs, chunksize=batch_size)
-
-    relevance_scores = np.array(relevance_scores)
-    sorted_doc_indices = np.argsort(-relevance_scores)
-
-    return [retrieved_docs[i] for i in sorted_doc_indices]
-
-
-
-
-# this is for extract the relevent part form the retrived documents 
-def extract_context(text):
-    # Use regex to find the content between <startcontext> and <endcontext>
-    match = re.search(r'<startcontext>(.*?)<endcontext>', text, re.DOTALL)
-    if match:
-        return match.group(1).strip()  # Return the matched text
-    else:
-        return None  # Return None if no match is found
-    
-
-    
-
-# Function to retrieve documents based on the query using the index
-def retrieve_documents(query, index, model, documents, top_k=1):
-
-    # set timer
-    start_time = time.time()
-
-    # Encode the query into a vector (embedding)
-    query_embedding = model.encode(query, convert_to_tensor=True).cpu().numpy()
-
-    # Reshape the query embedding to have shape (1, d)
-    query_embedding = query_embedding.reshape(1, -1)
-
-    # Perform the search on the index
-    distances, indices = index.search(query_embedding, k=top_k)  # top_k results
-
-    time_duration = time.time() - start_time
-    print("retrival duration : ", time_duration)
-
-    return [documents[idx] for idx in indices[0]]
-
 
 def format_text(text):
     # Replace **bold** with <b>bold</b>
@@ -228,56 +17,80 @@ def format_text(text):
         
     return text
 
-
-def create_prompt_with_tagged_contexts(retrived_doc_list, user_message, num_docs=3):
-    # Make sure we don't try to access more docs than are available
-    num_docs = min(num_docs, len(retrived_doc_list))
-    
-    # Create individually tagged context sections
-    context_parts = []
-    
-    for i in range(num_docs):
-        if i < len(retrived_doc_list):
-            # Create a tagged context for each document
-            tagged_context = f"<context_{i+1}>\n{retrived_doc_list[i]}\n</context_{i+1}>"
-            context_parts.append(tagged_context)
-    
-    # Join all context sections with newlines
-    combined_contexts = "\n\n".join(context_parts)
-    
-    # Create the final prompt
-    prompt_for_llm = f'{combined_contexts}\n\n' + "User message : " + user_message
-    
-    return prompt_for_llm
-
-
-
 #########################################################################################
 #stage2 impliments
 ############################################################################################
 # Load environment variables from .env file
 import os
-import zipfile
-import tempfile
-import shutil
+import docx
+from odf import text, teletype
+from odf.opendocument import load
+from typing import Dict
 from typing import List, Dict, Any, Tuple
 from tqdm import tqdm
 import openai
 from dotenv import load_dotenv
 import chromadb
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+import os
+from docx import Document  # python-docx for .docx files
+from pdfminer.high_level import extract_text  # Keeping existing PDF support
 
-import requests
-import json
+def get_app_data_dir():
+    app_data_dir = os.path.join(os.environ['APPDATA'], "Rag Doc System")
+    if not os.path.exists(app_data_dir):
+        os.makedirs(app_data_dir)
+    return app_data_dir
 
-from pdfminer.high_level import extract_text
+def fileFolderPathGen(relativePath):
+    return os.path.join(get_app_data_dir(), relativePath)
 
-
-ENV_DIR = r"../.env"
+ENV_DIR = fileFolderPathGen('.env') #r"../.env"
 load_dotenv(dotenv_path=ENV_DIR)
 
 # Configure OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# def get_documents_from_folder(folder_path: str) -> Dict[str, str]:
+#     """
+#     Extract text documents from a folder
+    
+#     Args:
+#         folder_path: Path to the folder containing documents
+        
+#     Returns:
+#         Dictionary mapping filenames to their content
+#     """
+#     documents = {}
+    
+#     # Process each file in the folder and its subfolders
+#     for root, _, files in os.walk(folder_path):
+#         for file in files:
+#             # Focus on text files
+#             if file.endswith(('.txt')):
+#                 file_path = os.path.join(root, file)
+#                 try:
+#                     with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+#                         content = f.read()
+#                         relative_path = os.path.relpath(file_path, folder_path)
+#                         documents[relative_path] = content
+#                 except Exception as e:
+#                     print(f"Error reading file {file_path}: {e}")
+
+#             # Focus on pdf files 
+#             if file.endswith(('.pdf')):
+#                 file_path = os.path.join(root, file)
+#                 try:
+#                     content = extract_text(file_path)
+#                     relative_path = os.path.relpath(file_path, folder_path)
+#                     txt_filename = f"{os.path.splitext(relative_path)[0]}.txt"
+
+#                     # save in the document dic as .txt
+#                     documents[txt_filename] = content
+#                 except Exception as e:
+#                     print(f"Error reading file {file_path}: {e}")
+    
+#     return documents
 
 def get_documents_from_folder(folder_path: str) -> Dict[str, str]:
     """
@@ -293,32 +106,39 @@ def get_documents_from_folder(folder_path: str) -> Dict[str, str]:
     
     # Process each file in the folder and its subfolders
     for root, _, files in os.walk(folder_path):
-        for file in files:
-            # Focus on text files
-            if file.endswith(('.txt')):
-                file_path = os.path.join(root, file)
-                try:
+        for file_ in files:
+            file_path = os.path.join(root, file_)
+            relative_path = os.path.relpath(file_path, folder_path)
+            txt_filename = f"{os.path.splitext(relative_path)[0]}.txt"
+            
+            try:
+                # Focus on text files
+                if file_.endswith('.txt'):
                     with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
                         content = f.read()
-                        relative_path = os.path.relpath(file_path, folder_path)
                         documents[relative_path] = content
-                except Exception as e:
-                    print(f"Error reading file {file_path}: {e}")
 
-            # Focus on pdf files 
-            if file.endswith(('.pdf')):
-                file_path = os.path.join(root, file)
-                try:
+                # Focus on pdf files 
+                elif file_.endswith('.pdf'):
                     content = extract_text(file_path)
-                    relative_path = os.path.relpath(file_path, folder_path)
-                    txt_filename = f"{os.path.splitext(relative_path)[0]}.txt"
-
-                    # save in the document dic as .txt
                     documents[txt_filename] = content
-                except Exception as e:
-                    print(f"Error reading file {file_path}: {e}")
+                
+                # Handle docx files
+                elif file_.endswith('.docx'):
+                    doc = docx.Document(file_path)
+                    content = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
+                    documents[txt_filename] = content
+                
+                # Handle odt files
+                elif file_.endswith('.odt'):
+                    doc = load(file_path)
+                    content = teletype.extractText(doc)
+                    documents[txt_filename] = content
+                    
+            except Exception as e:
+                print(f"Error reading file {file_path}: {e}")
     
-    return documents
+    return documents   
 
 
 def get_documents_from_filenames(root: str, filenames: List[str], collection_name: str) -> Dict[str, str]:
@@ -326,14 +146,14 @@ def get_documents_from_filenames(root: str, filenames: List[str], collection_nam
     Extract text documents from specific files in a folder
     
     Args:
-        folder_path: Path to the root folder
+        root: Path to the root folder
         filenames: List of file names to extract
+        collection_name: Name of the collection folder
         
     Returns:
         Dictionary mapping filenames to their content
     """
     folder_path = os.path.join(root, collection_name)
-
     documents = {}
     
     for filename in filenames:
@@ -352,12 +172,26 @@ def get_documents_from_filenames(root: str, filenames: List[str], collection_nam
                 txt_filename = f"{os.path.splitext(filename)[0]}.txt"
                 documents[txt_filename] = content
             
+            # Handle Word (.docx) files
+            elif filename.endswith('.docx'):
+                doc = Document(file_path)
+                content = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
+                txt_filename = f"{os.path.splitext(filename)[0]}.txt"
+                documents[txt_filename] = content
+            
+            # Handle OpenDocument (.odt) files
+            elif filename.endswith('.odt'):
+                textdoc = load(file_path)
+                allparas = textdoc.getElementsByType(text.P)
+                content = '\n'.join([teletype.extractText(para) for para in allparas])
+                txt_filename = f"{os.path.splitext(filename)[0]}.txt"
+                documents[txt_filename] = content
+            
         except Exception as e:
             print(f"Error reading file {file_path}: {e}")
     
     return documents
 
-    
 
 def save_documents_as_text_files_in_folder(documents, output_dir="extracted_documents"):
     """
@@ -454,107 +288,13 @@ def save_chunks_as_text_files(chunks: List[Dict[str, Any]], output_dir: str = "c
     print(f"Successfully saved {len(chunks)} chunk files to {output_dir}")
 
 
-
-# def get_embedding_of_the_text(text: str, embedding_model) -> List[float]:
-#     """
-#     Get embedding for text using OpenAI's text-embedding-3 model
-    
-#     Args:
-#         text: The text to embed
-        
-#     Returns:
-#         Embedding vector
-#     """
-#     # Clean and truncate text if needed
-#     if not text.strip():
-#         text = "Empty text"
-        
-#     # Get embedding from OpenAI API
-#     response = openai.embeddings.create(
-#         model=embedding_model,
-#         input=text
-#     )
-    
-#     return response.data[0].embedding
-
-
-
-# def get_and_save_embedings(batch_size, chunks, embedding_model, chroma_client, collection_name):
-#     try:
-#         collection = chroma_client.get_collection(collection_name)
-#         print(f"Using existing collection {collection_name}")
-#     except:
-#         collection = chroma_client.create_collection(collection_name)
-#         print(f"Created new collection {collection_name}")
-
-#     for i in tqdm(range(0, len(chunks), batch_size), desc="Generating embeddings"):
-#         batch = chunks[i:min(i+batch_size, len(chunks))]
-        
-#         ids = [chunk["id"] for chunk in batch]
-#         texts = [chunk["text"] for chunk in batch]
-#         metadatas = [chunk["metadata"] for chunk in batch]
-        
-#         # Generate embeddings
-        
-#         embeddings = [get_embedding_of_the_text(text, embedding_model) for text in texts]
-        
-    
-#         # Add to vector store
-#         collection.add(
-#             ids=ids,
-#             embeddings=embeddings,
-#             documents=texts,
-#             metadatas=metadatas
-#         )
-
-
-# def retrieve_relevant_documents(chroma_client, collection_name, embedding_model, query: str, top_k: int = 5, ) -> List[Dict[str, Any]]:
-#     """
-#     Retrieve relevant documents for a query
-    
-#     Args:
-#         query: The query text
-#         top_k: Number of documents to retrieve
-        
-#     Returns:
-#         List of relevant documents with metadata
-#     """
-
-#     try:
-#         collection = chroma_client.get_collection(collection_name)
-#         print("Using existing collection 'documents'")
-#     except:
-#         collection = chroma_client.create_collection(collection_name)
-#         print("Created new collection 'documents'")
-
-#     # Get query embedding
-#     query_embedding = get_embedding_of_the_text(query, embedding_model)
-    
-#     # Search in vector store
-#     results = collection.query(
-#         query_embeddings=[query_embedding],
-#         n_results=top_k
-#     )
-    
-#     documents = []
-#     for i in range(len(results["ids"][0])):
-#         documents.append({
-#             "text": results["documents"][0][i],
-#             "metadata": results["metadatas"][0][i],
-#             "id": results["ids"][0][i]
-#         })
-        
-#     return documents
-
-
-def clear_chroma_database(collection_name=None):
+def clear_chroma_database(chroma_client,collection_name=None):
     """
     Clear data from ChromaDB
     
     Args:
         collection_name: Name of the collection to clear. If None, all collections will be deleted.
     """
-    chroma_client = chromadb.Client()
     
     try:
         if collection_name:
@@ -708,9 +448,11 @@ def remove_data_by_filenames(chroma_client, collection_name, file_name_list):
         Number of documents removed
     """
     try:
+        #file name re genarate avoiding extention (all are txt)
+        file_name_list = [nn.split('.')[0]+'.txt' for nn in file_name_list]
         # Get the collection
         collection = chroma_client.get_collection(collection_name)
-        print(f"Accessing collection: {collection_name}")
+        print(f"Accessing collection: {collection_name}, {file_name_list} ,{type(file_name_list)}")
         
         # Get all documents with their metadata
         results = collection.get(include=["metadatas", "documents", "embeddings"])
@@ -718,7 +460,8 @@ def remove_data_by_filenames(chroma_client, collection_name, file_name_list):
         # Find IDs of documents that match the file names in file_name_list
         ids_to_remove = []
         for i, metadata in enumerate(results["metadatas"]):
-            if metadata.get("file_name") in file_name_list:
+            print(f"{i} : {metadata}")
+            if metadata.get("source") in file_name_list:
                 ids_to_remove.append(results["ids"][i])
         
         # Remove the documents if any were found

@@ -14,6 +14,20 @@ body {
     flex-direction: column;
 }
 
+img.server-start-lording-gif {
+    width: 172px;
+    margin: -53px 0 -42px 0;
+}
+
+.loading-page-text {
+    font-size: 17px;
+    color: #333;
+}
+
+.dragable {
+    -webkit-app-region: drag;
+}
+
 .title-bar {
     width: 100%;
     height: 31px;
@@ -155,7 +169,13 @@ div#user-button:hover {
     margin-top: 50px;
 }
 
+.tags-title {
+    font-size: 18px;
+    margin: 0 0 -24px 0px;
+}
+
 .tag {
+    display: flex;
     padding: 8px 12px;
     border: 1px solid gray;
     border-radius: 20px;
@@ -163,10 +183,30 @@ div#user-button:hover {
     color: #333;
     cursor: pointer;
     transition: 0.3s;
+    flex-direction: row-reverse;
 }
 
 .tag:hover {
     background: #f0f0f0;
+}
+
+svg.tag-icon-md {
+    display: block;
+    position: absolute;
+    background-color: #f0f0f000;
+    margin: -1px -6px -8px -14px;
+    backdrop-filter: blur(2px);
+    box-shadow: inset -6px 0px 9px 11px #f0f0f0, -7px 0px 8px 0px #f0f0f0;
+    border-radius: 5px;
+    transition: display 0.3s ease-in-out;
+}
+
+.collection-dropbox {
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    margin: 21px -22px 0 0;
 }
 
 .add-tag {
@@ -405,10 +445,24 @@ img.file-extention-img {
     transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
     opacity: 1;
     visibility: visible;
+    width: 7rem;
+    margin-right: 0.2rem;
+    
+    white-space: nowrap;         /* Prevent text from wrapping */
+    overflow: hidden;            /* Hide overflowed text */
+    text-overflow: ellipsis;     /* Add ellipsis (...) */
+    display: inline-block;       /* Ensure width is respected */
 }
+
+span.add-tag-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .hidden {
     opacity: 0;
     visibility: hidden;
+    display: none;
 }
 
 button.chat-section-document-add-btn {
@@ -545,7 +599,7 @@ img.send-button {
 
 .user-setting-section, .collection-document-update-section,
 .user-password-Authontication-section, .user-name-edit-section,
-.user-apikey-edit-section, .user-password-edit-section {
+.user-apikey-edit-section, .user-password-edit-section, .collection-delete-section {
     display: flex;
     position: absolute;
     width: 100%;
@@ -560,7 +614,7 @@ img.send-button {
 
 .setting-section-container, .user-password-Authontication-section-container,
 .user-name-edit-section-container, .user-apikey-edit-section-container,
-.user-password-edit-section-container {
+.user-password-edit-section-container, .collection-delete-section-container {
     display: flex;
     flex-direction: row;
     border: 1px solid #ccc;
@@ -702,7 +756,7 @@ font.setting-detaile-title {
 }
 
 .Authontication-password-container, .name-edit-container, .apikey-edit-container,
-.password-edit-container {
+.password-edit-container, .collection-delete-btn-container {
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
@@ -712,12 +766,41 @@ font.setting-detaile-title {
 }
 
 .setting-user-all-details-container, .Authontication-password-container,
-.name-edit-container, .apikey-edit-container, .password-edit-container {
+.name-edit-container, .apikey-edit-container, .password-edit-container, .collection-delete-btn-container {
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
     width: 35rem;
     margin-top: 10px;
+}
+
+.collection-delete-btn-container {
+    width: 20rem;
+}
+
+.collection-delete-btn-action-container {
+    display: flex;
+    gap: 26px;
+}
+
+.file-icon-md {
+    position: relative;
+    background-color: #f0f0f000;
+    margin: -8px 0px -8px 0px;
+    backdrop-filter: blur(2px);
+    box-shadow: inset -6px 0px 9px 11px #f0f0f0, -7px 0px 8px 0px #f0f0f0;
+    border-radius: 5px;
+    right: 0px;
+    transition: display 0.3s ease-in-out;
+}
+
+.file-dropbox {
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    right: 9px;
+    margin: 0px 0px -53px 0px;
 }
 
 .setting-user-one-detail-section {
