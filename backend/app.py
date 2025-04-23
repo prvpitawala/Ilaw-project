@@ -24,11 +24,29 @@ from flask import request, jsonify
 
 # from pdfminer.high_level import extract_text
 
+# Add near the top of your file
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+# Modify your get_app_data_dir function to ensure it works in EXE mode
 def get_app_data_dir():
-    app_data_dir = os.path.join(os.environ['APPDATA'], "Rag Doc System")
+    app_data_dir = os.path.join(os.environ['APPDATA'], "Ilaw System")
     if not os.path.exists(app_data_dir):
         os.makedirs(app_data_dir)
     return app_data_dir
+
+# def get_app_data_dir():
+#     app_data_dir = os.path.join(os.environ['APPDATA'], "Rag Doc System")
+#     if not os.path.exists(app_data_dir):
+#         os.makedirs(app_data_dir)
+#     return app_data_dir
 
 def fileFolderPathGen(relativePath):
     return os.path.join(get_app_data_dir(), relativePath)

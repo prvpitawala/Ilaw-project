@@ -17,8 +17,8 @@
     "make": "electron-builder"
   },
   "build": {
-    "appId": "com.ragdoc.id",
-    "productName": "Rag Doc System",
+    "appId": "com.ilaw.id",
+    "productName": "Ilaw System",
     "copyright": "Copyright © 2025 Lumeo Labs",
     "directories": {
       "output": "dist"
@@ -39,10 +39,13 @@
       "!build/*",
       "!venv/*",
       "!files/*",
-      "!app.spec"
+      "!rag_app.spec",
+      "!installer.nsi"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "signingHashAlgorithms": null,
+      "sign": null
     },
     "nsis": {
       "oneClick": false,

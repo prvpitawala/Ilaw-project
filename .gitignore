@@ -1,8 +1,8 @@
-files
 venv
 node_modules
 .env
+dist
+Ilaw System-Setup-1.0.0.exe
 
-build/app
+build/rag_app
 backend/__pycache__
-frontend/node_modules

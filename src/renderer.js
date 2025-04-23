@@ -4,25 +4,22 @@ const UIComponents = {
     <div id="page1" class="page active">
         <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="User Icon" class="profile-icon">
         <h3>Name</h3>
-        <input type="text" id="nameInput" placeholder="Enter Name">
+        <input class="reg-btns" type="text" id="nameInput" placeholder="Enter Name">
         <button onclick="nextPage(2)">Next</button>
     </div>
 
     <!-- Page 2: Enter Password -->
     <div id="page2" class="page">
         <h3>Password</h3>
-        <input type="password" id="passwordInput" placeholder="Enter password">
+        <input class="reg-btns" type="password" id="passwordInput" placeholder="Enter password">
         <button onclick="nextPage(3)">Next</button>
     </div>
         
     <!-- Page 3: Enter API Key -->
     <div id="page3" class="page">
         <h3>API Key</h3>
-        <div class="register-page-input-container">
-            <input type="text" id="chatgptApiKeyInput" placeholder="Enter ChatGPT API Key (requirde)">
-            <input type="text" id="geminiApiKeyInput" placeholder="Enter Gemini API Key (optional)" style="display:none;">
-        </div>
-        <button onclick="register()">Sign Up</button>
+        <input class="reg-btns" type="text" id="chatgptApiKeyInput" placeholder="Enter ChatGPT API Key (requirde)">
+        <button id="registerPageRegisterBtn"onclick="register()">Sign Up</button>
     </div>`,
     collection_selector:`
     <div class="tags-title">Collections</div>
@@ -310,6 +307,24 @@ window.onload = async function() {
     } else {
         loadUI("renderContainer","registerPages");   
     }
+ 
+    // register btn enter part
+    try {
+        const reg_inputs = Array.from(document.getElementsByClassName("reg-btns"));
+
+        reg_inputs.forEach(btn => {
+            btn.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    if (btn.parentElement.classList.contains('active')) {
+                        btn.parentElement.querySelector('button').click();
+                    }
+                }
+            });
+        });
+    } catch {}
+
+
+
 };
 
 function loadUI(section,UIname) {
@@ -338,7 +353,7 @@ function hideShow(id,visibility) {
 async function register() {
     const nameInput = document.getElementById('nameInput').value;
     const passwordInput = document.getElementById('passwordInput').value;
-    const GeminiApiKeyInput = document.getElementById('geminiApiKeyInput').value;
+    // const GeminiApiKeyInput = document.getElementById('geminiApiKeyInput').value;
     const ChatGPTApiKeyInput = document.getElementById('chatgptApiKeyInput').value;
 
     if(!ChatGPTApiKeyInput){
@@ -348,8 +363,11 @@ async function register() {
     const formData = new FormData();
     formData.append('userName', nameInput);
     formData.append('password', passwordInput);
-    formData.append('geminiApiKey', GeminiApiKeyInput);
+    formData.append('geminiApiKey', "GeminiApiKeyInput");
     formData.append('chatGPTApiKey', ChatGPTApiKeyInput);
+
+    document.getElementById('registerPageRegisterBtn').innerHTML = `<img src="../public/icons/uploading.gif" class="collection-upload-lording-gif">`;
+
     try {
         const response = await fetch('http://127.0.0.1:5000/register', {
             method: 'POST',
@@ -377,7 +395,7 @@ async function setCollectionToUI() {
                 <div class="collection-dropbox hide">
                     <div class="user-button-dropbox-item">Delete</div>     
                 </div>
-                <font>${letter}</font>
+                <font class="collection-tag-title">${letter}</font>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                     xmlns="http://www.w3.org/2000/svg" class="tag-icon-md" style="display: none;">
                     <path fill-rule="evenodd" clip-rule="evenodd"
@@ -386,7 +404,7 @@ async function setCollectionToUI() {
                 </svg>
             </div>
         `).join("") 
-        + `<div class="add-tag show" id="addTag" onclick="addDocument()"><span class="add-tag-title" title="Create new file collection">+</span></div>`;
+        + `<span class="add-tag-title" title="Create new file collection"><div class="add-tag show" id="addTag" onclick="addDocument()">+</div></span>`;
 
     // Add event listeners to each tag
     const tagElements = Array.from(document.getElementsByClassName("tag"));
@@ -396,14 +414,21 @@ async function setCollectionToUI() {
         const dropbox = tag.querySelector('.collection-dropbox');
         const deleteBtn = tag.querySelector('.user-button-dropbox-item');
         const letter = tag.dataset.letter;
+        const tagwidth = tag.getBoundingClientRect().width;
+        const titleElement = tag.querySelector('.collection-tag-title');
+        tag.style.width = tagwidth + "px";
 
         // Hover to show/hide icon
         tag.addEventListener("mouseover", () => {
             icon.style.display = 'block';
+            tag.style.width = tagwidth + 15 + "px";
+            titleElement.style.left = -20 + "px";
         });
 
         tag.addEventListener("mouseout", () => {
             icon.style.display = 'none';
+            tag.style.width = tagwidth + "px";
+            titleElement.style.left = 0 + "px";
         });
 
         // Click icon to toggle dropbox
@@ -430,6 +455,17 @@ async function setCollectionToUI() {
         // Optional: clicking anywhere else on tag runs messageSection()
         tag.addEventListener("click", () => {
             messageSection(letter);
+        });
+
+        // Prevent click on dropbox from closing itself or triggering tag click
+        dropbox.addEventListener("click", (e) => {
+            e.stopPropagation();
+        });
+    });
+
+    document.addEventListener("click", () => {
+        document.querySelectorAll('.collection-dropbox.show').forEach(box => {
+            box.classList.replace('show', 'hide');
         });
     });
 }
@@ -611,10 +647,37 @@ async function updateCollectionDocuments(event) {
     const fileInput = document.getElementById('fileInput');
     collectionName = document.getElementById('chatTitle').innerText;
 
-    document.getElementsByClassName('upload-button')[0].innerHTML = `<img src="../public/icons/uploading.gif" class="collection-upload-lording-gif">`;
-
     if (!fileInput.files.length) {
         //alert("Please select at least one file.");
+        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Not any file is picked">Error</span>`;
+        return;
+    }
+
+    // Check if collection name is empty
+    if (!collectionName || collectionName.trim() === '') {
+        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="No collection selected">Error</span>`;
+        return;
+    }
+
+    // List of allowed file extensions
+    const allowedExtensions = ['pdf', 'txt', 'docx', 'odt']; // Adjust this list as needed
+
+    // Check each file's extension
+    let hasInvalidExtension = false;
+    let invalidefilename = "";
+    for (let i = 0; i < fileInput.files.length; i++) {
+        const filename = fileInput.files[i].name;
+        const extension = getFileExtension(filename).toLowerCase();
+        
+        if (!allowedExtensions.includes(extension)) {
+            hasInvalidExtension = true;
+            invalidefilename = filename;
+        }
+    }
+
+    // Optional: Show error message if invalid extensions were found
+    if (hasInvalidExtension) {
+        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Invalid file type detected in : ${invalidefilename}">Error</span>`;
         return;
     }
     
@@ -626,6 +689,8 @@ async function updateCollectionDocuments(event) {
     Array.from(fileInput.files).forEach((file) => {
         formData.append('files', file);  // Append each file separately
     });
+
+    document.getElementsByClassName('upload-button')[0].innerHTML = `<img src="../public/icons/uploading.gif" class="collection-upload-lording-gif">`;
 
     try {
         const response = await fetch('http://127.0.0.1:5000/update/doc', {
@@ -642,6 +707,7 @@ async function updateCollectionDocuments(event) {
         }
     } catch (error) {
         console.error("Error uploading files:", error);
+        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="${error}">Error</span>`;
         //alert("Upload failed. See console for details.");
     }
 }
@@ -897,17 +963,28 @@ async function messageSection(collectionName) {
             icon.style.display = 'none';
         });
 
-        // Click icon to toggle dropbox
         icon.addEventListener("click", (e) => {
             e.stopPropagation(); // Prevent bubbling to outer click
-            document.querySelectorAll('.collection-dropbox').forEach(box => {
+            
+            // Close any other open dropboxes
+            document.querySelectorAll('.file-dropbox').forEach(box => {
                 if (box !== dropbox) {
                     if (box.classList.contains('show')) {
                         box.classList.replace('show', 'hide');
                     }
                 }
             });
-
+            
+            // Calculate and set position of the dropbox relative to the icon
+            const iconRect = icon.getBoundingClientRect();
+            
+            // Position the dropbox next to the 3-dot button
+            dropbox.style.position = 'absolute';
+            dropbox.style.top = (iconRect.y - 12) + 'px';
+            dropbox.style.left = (iconRect.x) + 'px';
+            dropbox.style.width = 47 + 'px';
+            
+            // Toggle visibility classes
             dropbox.classList.toggle('hide');
             dropbox.classList.toggle('show');
         });
@@ -922,7 +999,30 @@ async function messageSection(collectionName) {
         fileEL.addEventListener("click", () => {
             // messageSection(letter); file view funcion
         });
+
+        // Prevent click on dropbox from closing itself or triggering tag click
+        dropbox.addEventListener("click", (e) => {
+            e.stopPropagation();
+        });
     });
+
+    // Close all dropboxes when clicking elsewhere
+    document.addEventListener("click", () => {
+        document.querySelectorAll('.collection-dropbox.show, .file-dropbox.show').forEach(box => {
+            box.classList.replace('show', 'hide');
+        });
+    });
+
+    // Handle both scroll events and wheel events (for touchpad two-finger scrolling)
+    window.addEventListener("scroll", closeAllDropboxes);
+    window.addEventListener("wheel", closeAllDropboxes);
+
+    // Function to close all open dropboxes
+    function closeAllDropboxes() {
+        document.querySelectorAll('.collection-dropbox.show, .file-dropbox.show').forEach(box => {
+            box.classList.replace('show', 'hide');
+        });
+    }
 }
 
 async function fileDeleteSection(filename,collectionname) {
@@ -1163,10 +1263,37 @@ async function uploadDocument() {
     const fileInput = document.getElementById('fileInput');
     const collection = document.getElementById('collectionSelect').value;
 
-    document.getElementsByClassName('upload-button')[0].innerHTML = `<img src="../public/icons/uploading.gif" class="collection-upload-lording-gif">`;
-
     if (!fileInput.files.length) {
         //alert("Please select at least one file.");
+        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Not any file is picked">Error</span>`;
+        return;
+    }
+
+    // Check if collection name is empty
+    if (!collection || collection.trim() === '') {
+        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="No collection selected">Error</span>`;
+        return;
+    }
+
+    // List of allowed file extensions
+    const allowedExtensions = ['pdf', 'txt', 'docx', 'odt']; // Adjust this list as needed
+
+    // Check each file's extension
+    let hasInvalidExtension = false;
+    let invalidefilename = "";
+    for (let i = 0; i < fileInput.files.length; i++) {
+        const filename = fileInput.files[i].name;
+        const extension = getFileExtension(filename).toLowerCase();
+        
+        if (!allowedExtensions.includes(extension)) {
+            hasInvalidExtension = true;
+            invalidefilename = filename;
+        }
+    }
+
+    // Optional: Show error message if invalid extensions were found
+    if (hasInvalidExtension) {
+        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Invalid file type detected in : ${invalidefilename}">Error</span>`;
         return;
     }
     
@@ -1178,6 +1305,8 @@ async function uploadDocument() {
     Array.from(fileInput.files).forEach((file) => {
         formData.append('files', file);  // Append each file separately
     });
+    
+    document.getElementsByClassName('upload-button')[0].innerHTML = `<img src="../public/icons/uploading.gif" class="collection-upload-lording-gif">`;
 
     try {
         const response = await fetch('http://127.0.0.1:5000/upload/doc', {
@@ -1194,6 +1323,7 @@ async function uploadDocument() {
         }
     } catch (error) {
         console.error("Error uploading files:", error);
+        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="${error}">Error</span>`;
         //alert("Upload failed. See console for details.");
     }
 }

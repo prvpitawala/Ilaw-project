@@ -1,4 +1,4 @@
-!define APP_NAME "Rag Doc System"
+!define APP_NAME "Ilaw System"
 !define APP_VERSION "1.0.0"
 !define PUBLISHER "Lumeo Labs"
 !define AUTHOR_NAME "Raveen Pitawla"
@@ -9,6 +9,7 @@
 # Include necessary NSIS functions
 !include "MUI2.nsh"
 !include "FileFunc.nsh"  # Added for the GetSize function
+!include "LogicLib.nsh"  # Added for ${If} ${EndIf} statements
 
 RequestExecutionLevel admin  ; Ensures installer runs as administrator
 
@@ -22,7 +23,7 @@ InstallDir "$PROGRAMFILES\${APP_NAME}"
 
 # Define UI pages
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "LICENSE"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
@@ -34,6 +35,29 @@ InstallDir "$PROGRAMFILES\${APP_NAME}"
 !insertmacro MUI_LANGUAGE "English"
 
 Section "Install"
+    # Check if application is already installed
+    IfFileExists "$INSTDIR\uninstall.exe" 0 check_program_files_x86
+        MessageBox MB_YESNO|MB_ICONQUESTION "${APP_NAME} is already installed. Would you like to uninstall it before continuing?" IDNO check_program_files_x86
+        
+        # Run the uninstaller
+        ExecWait '"$INSTDIR\uninstall.exe" /S _?=$INSTDIR'
+        
+        # Wait for uninstaller to finish
+        Sleep 2000
+        
+    check_program_files_x86:
+    # Check if previous installation exists in Program Files (x86) and remove it
+    IfFileExists "$PROGRAMFILES32\${APP_NAME}\*.*" 0 check_appdata
+        MessageBox MB_YESNO|MB_ICONQUESTION "A previous installation of ${APP_NAME} was found in Program Files (x86). Would you like to remove it before continuing?" IDNO check_appdata
+        RMDir /r "$PROGRAMFILES32\${APP_NAME}"
+        
+    check_appdata:
+    # Check if previous installation exists in AppData and remove it
+    IfFileExists "${APPDATA_FOLDER}\*.*" 0 continue_installation
+        MessageBox MB_YESNO|MB_ICONQUESTION "Previous application data for ${APP_NAME} was found. Would you like to remove it before continuing?" IDNO continue_installation
+        RMDir /r "${APPDATA_FOLDER}"
+    
+    continue_installation:
     SetOutPath "$INSTDIR"
     
     # Extract core files
@@ -47,7 +71,7 @@ Section "Install"
     # File /r "dist\*.*"
     
     # Copy additional files
-    File "dist\app.exe"
+    File "dist\Ilaw_System.exe"
     ; File "package.json"
     ; File "LICENSE.txt"
     File "build\icon.ico"  # Copy the icon file to the installation directory
@@ -57,20 +81,20 @@ Section "Install"
     
     # Adjust the executable path to match your actual Electron app executable
     # It might be something like Rag Doc System.exe or RagDocSystem.exe in the install dir
-    CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\Rag Doc System.exe" "" "$INSTDIR\icon.ico" 0
+    CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\Ilaw System.exe" "" "$INSTDIR\icon.ico" 0
     CreateShortcut "$SMPROGRAMS\${APP_NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-    CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\Rag Doc System.exe" "" "$INSTDIR\icon.ico" 0
+    CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\Ilaw System.exe" "" "$INSTDIR\icon.ico" 0
     
     # Create Startup Batch File
     FileOpen $0 "$INSTDIR\startup.bat" "w"
     FileWrite $0 "@echo off$\r$\n"
     FileWrite $0 "cd $INSTDIR$\r$\n"
-    FileWrite $0 'powershell -WindowStyle Hidden -Command "Start-Process \"$INSTDIR\app.exe\" -WindowStyle Hidden"$\r$\n'
+    FileWrite $0 'powershell -WindowStyle Hidden -Command "Start-Process \"$INSTDIR\Ilaw_System.exe\" -WindowStyle Hidden"$\r$\n'
     FileWrite $0 "exit$\r$\n"
     FileClose $0
 
     # Move Batch File to Startup Folder
-    CopyFiles "$INSTDIR\startup.bat" "${STARTUP_PATH}\RagDocStartup.bat"
+    CopyFiles "$INSTDIR\startup.bat" "${STARTUP_PATH}\IlawStartup.bat"
     
     # Create uninstaller
     WriteUninstaller "$INSTDIR\uninstall.exe"
@@ -103,14 +127,14 @@ Section "Uninstall"
     MessageBox MB_ICONINFORMATION|MB_OK "Closing any running application processes..."
     
     # Kill app.exe and Rag Doc System.exe processes using taskkill
-    ExecWait 'taskkill /f /im "app.exe" /t' $0
-    ExecWait 'taskkill /f /im "Rag Doc System.exe" /t' $0
+    ExecWait 'taskkill /f /im "Ilaw_System.exe" /t' $0
+    ExecWait 'taskkill /f /im "Ilaw System.exe" /t' $0
     
     # Wait a moment to ensure processes are terminated
     Sleep 1000
     
     # Remove startup batch file
-    Delete "${STARTUP_PATH}\RagDocStartup.bat"
+    Delete "${STARTUP_PATH}\IlawStartup.bat"
     
     # Remove shortcuts
     Delete "$DESKTOP\${APP_NAME}.lnk"
@@ -122,7 +146,7 @@ Section "Uninstall"
     RMDir /r "$INSTDIR\src"
     RMDir /r "$INSTDIR\resources"
     RMDir /r "$INSTDIR\files"
-    Delete "$INSTDIR\app.exe"
+    Delete "$INSTDIR\Ilaw _System.exe"
     Delete "$INSTDIR\package.json"
     Delete "$INSTDIR\LICENSE.txt"
     Delete "$INSTDIR\startup.bat"

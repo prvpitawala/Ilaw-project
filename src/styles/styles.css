@@ -190,6 +190,11 @@ div#user-button:hover {
     background: #f0f0f0;
 }
 
+font.collection-tag-title {
+    position: relative;
+    transition: left 0.5s;
+}
+
 svg.tag-icon-md {
     display: block;
     position: absolute;

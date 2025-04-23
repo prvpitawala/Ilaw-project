@@ -271,7 +271,9 @@ def save_chunks_as_text_files(chunks: List[Dict[str, Any]], output_dir: str = "c
     
     for chunk in chunks:
         # Create a filename based on the chunk ID
-        filename = f"{chunk['id'].replace('/', '_').replace('\\', '_')}.txt"
+        safe_id = chunk['id'].replace('/', '_').replace('\\', '_')
+        filename = f"{safe_id}.txt"
+
         file_path = os.path.join(output_dir, filename)
         
         # Write the chunk content to a file
