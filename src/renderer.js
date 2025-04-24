@@ -76,9 +76,11 @@ const UIComponents = {
             <img src="../public/icons/side-bar-hide.png" class="side-bar-hide-button-img" id="sideBarActionButton" alt="Send" onclick="sideBar('hide')">
         </div>
         <ul class="file-list" id="fileList"></ul>
-        <div class="add-document-in-side-bar">
-            <button onclick="collectionDocumentUpdateSection()" class="chat-section-document-add-btn"> + </button>
-        </div>
+        <span id="sidebarAddFileButton" class="add-tag-title" title="Update files">
+            <div class="add-document-in-side-bar">
+                <button onclick="collectionDocumentUpdateSection()" class="chat-section-document-add-btn"> + </button>
+            </div>
+        </span>
     </div>`,
     mainChat: `
     <div class="main-content">
@@ -1074,28 +1076,33 @@ async function deleteFile(filename,collectionname) {
     }
 }
 
-function sideBar(visibility){
+function sideBar(visibility) {
     if (visibility === 'show') {
-        document.getElementById('sideBarActionButton').setAttribute('src',"../public/icons/side-bar-hide.png");
-        document.getElementById('sideBarActionButton').setAttribute('onclick',"sideBar('hide')");
+        document.getElementById('sideBarActionButton').setAttribute('src', "../public/icons/side-bar-hide.png");
+        document.getElementById('sideBarActionButton').setAttribute('onclick', "sideBar('hide')");
         document.getElementById('sideContainer').style.width = '20%';
-        document.getElementById('bodeContainer').style.width = '60%';
-        hideShow('userButtonDropbox','hide');
+        document.getElementById('bodeContainer').style.width = '60%';  // Note: Possible typo 'bode' instead of 'body'
+        hideShow('userButtonDropbox', 'hide');
+        document.getElementById('fileList').style.display = 'block';
+        document.getElementById('sidebarAddFileButton').style.display = 'block';
+        document.getElementById('sideBar').style.borderRight = '1px solid #ccc'; // Fixed CSS property name and added value
         document.querySelectorAll('.file-title').forEach(file => {
-            file.classList.remove('hidden'); // Smoothly fades out
+            file.classList.remove('hidden');
         });
     } else {
-        document.getElementById('sideBarActionButton').setAttribute('src',"../public/icons/side-bar-show.png");
-        document.getElementById('sideBarActionButton').setAttribute('onclick',"sideBar('show')");
+        document.getElementById('sideBarActionButton').setAttribute('src', "../public/icons/side-bar-show.png");
+        document.getElementById('sideBarActionButton').setAttribute('onclick', "sideBar('show')");
         document.getElementById('sideContainer').style.width = '6%';
-        document.getElementById('bodeContainer').style.width = '75%';
-        hideShow('userButtonDropbox','hide');
+        document.getElementById('bodeContainer').style.width = '75%';  // Possible typo 'bode' instead of 'body'
+        hideShow('userButtonDropbox', 'hide');
+        document.getElementById('fileList').style.display = 'none';
+        document.getElementById('sidebarAddFileButton').style.display = 'none';
+        document.getElementById('sideBar').style.borderRight = 'none'; // Fixed CSS property and provided proper value
         document.querySelectorAll('.file-title').forEach(file => {
-            file.classList.add('hidden'); // Smoothly fades out
+            file.classList.add('hidden');
         });
     }
 }
-
 async function showSuggestionsCallection() {
     const input = document.getElementById("collectionSelect");
     const query = input.value.toLowerCase();
@@ -1414,6 +1421,7 @@ async function submitQuery() {
         });
         const result = await response.json();
         document.getElementById('resultDisplay').innerHTML = `${result.response || result.error}`;
+        document.getElementById('messageInput').value = '';
     } catch (error) {
         console.error("Error submitting query:", error);
         //alert("Query failed. See console for details.");

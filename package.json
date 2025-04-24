@@ -18,7 +18,7 @@
   },
   "build": {
     "appId": "com.ilaw.id",
-    "productName": "Ilaw System",
+    "productName": "Ilaw App",
     "copyright": "Copyright © 2025 Lumeo Labs",
     "directories": {
       "output": "dist"
