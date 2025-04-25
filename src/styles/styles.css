@@ -40,7 +40,6 @@ img.server-start-lording-gif {
     display: flex;
     justify-content: center;
     width: 60%; 
-    /* width: 100%; */
     align-items: center;
     height: calc(100vh-31px);
     background-color: #fff;
@@ -382,18 +381,35 @@ img.collection-upload-lording-gif {
     min-width: 3.75rem;
 }
 
+#sideContainer, #bodyContainer {
+    transition: width 0.3s ease-in-out;
+}
+/* ###################################################### */
+/* Animation for sideContainer width */
 #sideContainer {
     transition: width 0.3s ease-in-out;
 }
 
+/* Animation specifically for fileList opacity */
+#fileList, #sidebarAddFileButton {
+    transition: opacity 0.3s ease-in-out;
+}
+
+#sideBar {
+    transition: borderRight 0.3s ease-in-out;
+}
+
+/* ############################################################### */
+
 .sidebar {
     display: flex;
-    /* position: relative; */
+    /* position: relative; */ /* This line is commented out */
     height: 100%;
     flex-direction: column;
     flex-wrap: nowrap;
-    border-right:1px solid #ccc;
+    border-right: 1px solid #ccc;
 }
+
 
 .file-list {
     height: 75vh;

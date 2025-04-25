@@ -59,7 +59,7 @@ const UIComponents = {
                 <div class="plus-icon">+</div>
                 <div class="file-text" id="fileNamesText">Drag the files or Paste the files</div>
                 
-                <input type="file" id="fileInput" style="display: none;" multiple onchange="displayFileNames()">
+                <input type="file" id="fileInput" style="display: none;" accept=".txt,.pdf,.docx,.odt" multiple onchange="displayFileNames()">
             </div>
             <div class="file-format">Supported file format (txt, PDF, DOCX, ODT)</div>
         </div>
@@ -276,7 +276,7 @@ const UIComponents = {
                     <div class="file-upload-box" onclick="document.getElementById('fileInput').click()">
                         <div class="plus-icon">+</div>
                         <div class="file-text" id="fileNamesText">Drag the files or Paste the files</div>
-                        <input type="file" id="fileInput" style="display: none;" multiple onchange="displayFileNames()">
+                        <input type="file" id="fileInput" style="display: none;" accept=".txt,.pdf,.docx,.odt" multiple onchange="displayFileNames()">
                     </div>
                     <div class="file-format">Supported file format (txt, PDF, DOCX, ODT)</div>
                 </div>
@@ -284,7 +284,7 @@ const UIComponents = {
                     <div class="label">Collection Name</div>
                     <div class="input-box" id="collectionName"></div>
                 </div>
-                <button class="upload-button" data="collection-document-update-section" onclick="updateCollectionDocuments(event)">Update</button>
+                <button id="collectionDocumentUploadSectionContainer" class="upload-button" data="collection-document-update-section" onclick="updateCollectionDocuments(event)">Update</button>
             </div>     
         </div>
     </section>`,
@@ -293,6 +293,93 @@ const UIComponents = {
 var collections;
 var curruntpage; //'dashbord','message','userSetting'
 var previouspage;
+
+// Create a global event manager
+const eventManager = {
+    // Store listeners by element and event type
+    listeners: new Map(),
+    
+    // Add an event listener and track it
+    addEventListener(element, type, callback, options) {
+      // Get the unique ID for this element (for tracking purposes)
+      if (!element._eventId) {
+        element._eventId = Symbol('eventId');
+      }
+      
+      // Initialize maps for this element if needed
+      if (!this.listeners.has(element._eventId)) {
+        this.listeners.set(element._eventId, new Map());
+      }
+      
+      // Get or create the array of listeners for this event type
+      const elementListeners = this.listeners.get(element._eventId);
+      if (!elementListeners.has(type)) {
+        elementListeners.set(type, []);
+      }
+      
+      // Add this callback to our tracking array
+      const callbacks = elementListeners.get(type);
+      callbacks.push(callback);
+      
+      // Actually add the event listener to the element
+      element.addEventListener(type, callback, options);
+      
+      // Return a function that can remove this specific listener
+      return () => this.removeEventListener(element, type, callback);
+    },
+    
+    // Remove a specific event listener
+    removeEventListener(element, type, callback) {
+      if (!element._eventId || !this.listeners.has(element._eventId)) {
+        return false;
+      }
+      
+      const elementListeners = this.listeners.get(element._eventId);
+      if (!elementListeners.has(type)) {
+        return false;
+      }
+      
+      const callbacks = elementListeners.get(type);
+      const index = callbacks.indexOf(callback);
+      
+      if (index !== -1) {
+        callbacks.splice(index, 1);
+        element.removeEventListener(type, callback);
+        return true;
+      }
+      
+      return false;
+    },
+    
+    // Remove all event listeners of a specific type
+    removeAllEventListeners(element, type) {
+      if (!element._eventId || !this.listeners.has(element._eventId)) {
+        return;
+      }
+      
+      const elementListeners = this.listeners.get(element._eventId);
+      
+      if (type) {
+        // Remove listeners of a specific type
+        if (elementListeners.has(type)) {
+          const callbacks = elementListeners.get(type);
+          callbacks.forEach(callback => {
+            element.removeEventListener(type, callback);
+          });
+          elementListeners.delete(type);
+        }
+      } else {
+        // Remove all listeners from this element
+        elementListeners.forEach((callbacks, eventType) => {
+          callbacks.forEach(callback => {
+            element.removeEventListener(eventType, callback);
+          });
+        });
+        this.listeners.delete(element._eventId);
+      }
+    }
+};
+
 function pageUpdater(cPage) {
     previouspage = curruntpage;
     curruntpage = cPage;
@@ -641,6 +728,22 @@ async function collectionDocumentUpdateSection() {
     // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
     collectionName = document.getElementById('chatTitle').innerText;
     document.getElementById('collectionName').innerText = collectionName;
+
+    collectionSectionUpdateBTN = document.getElementById('collectionDocumentUploadSectionContainer');
+    collectionSectionUpdateBTN.focus();
+
+    if (isElementVisibleToUser(collectionSectionUpdateBTN)) {
+        eventManager.removeAllEventListeners(document,"keypress");
+        eventManager.addEventListener(document,"keypress", function(event) {
+            if (event.key === "Enter") {
+                if (isElementVisibleToUser(collectionSectionUpdateBTN)) {
+                    collectionSectionUpdateBTN.click();
+                }
+            }
+        });
+    }
+    
+
 }
 
 async function updateCollectionDocuments(event) {
@@ -787,8 +890,22 @@ async function userDataEditSection(event) {
 
 function userNameEditSection() {
     document.body.insertAdjacentHTML('beforeend', UIComponents.userNameEditSection);
+    usernamesubmitBTN = document.getElementById("userNameEditButton");
+    document.querySelector("#nameEditInput").focus();
+
+    if (isElementVisibleToUser(usernamesubmitBTN)) {
+        eventManager.removeAllEventListeners(document,"keypress");
+        eventManager.addEventListener(document,"keypress", function(event) {
+            if (event.key === "Enter") {
+                if (isElementVisibleToUser(usernamesubmitBTN)) {
+                    usernamesubmitBTN.click();
+                }
+            }
+        });
+    }
+
     // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
-    document.getElementById("userNameEditButton").addEventListener("click", async () => {
+    usernamesubmitBTN.addEventListener("click", async () => {
         try {
             const userName = document.getElementById("nameEditInput").value;
             if(userName) {
@@ -829,7 +946,22 @@ async function userAPIKeyEditSection() {
     const apiData = await getProfileAPI()
     document.getElementById('geminiapikeyEditInput').value = apiData.geminiApiKey;
     document.getElementById('chatGPTapikeyEditInput').value = apiData.chatGPTApiKey;
-    document.getElementById("userApikeyEditButton").addEventListener("click", async () => {
+
+    userapisubmitBTN = document.getElementById("userApikeyEditButton");
+    document.querySelector("#chatGPTapikeyEditInput").focus();
+
+    if (isElementVisibleToUser(userapisubmitBTN)) {
+        eventManager.removeAllEventListeners(document,"keypress");
+        eventManager.addEventListener(document,"keypress", function(event) {
+            if (event.key === "Enter") {
+                if (isElementVisibleToUser(userapisubmitBTN)) {
+                    userapisubmitBTN.click();
+                }
+            }
+        });
+    }
+
+    userapisubmitBTN.addEventListener("click", async () => {
         try {
             const geminiApiKey = document.getElementById('geminiapikeyEditInput').value;
             const chatGPTApiKey = document.getElementById('chatGPTapikeyEditInput').value;
@@ -865,8 +997,24 @@ async function userAPIKeyEditSection() {
 
 function userPasswordEditSection() {
     document.body.insertAdjacentHTML('beforeend', UIComponents.userPasswordEditSection);
+
+    userpasswordsubmitBTN = document.getElementById("userPasswordEditButton");
+    document.querySelector("#passwordEditInput").focus();
+
+    if (isElementVisibleToUser(userpasswordsubmitBTN)) {
+        eventManager.removeAllEventListeners(document,"keypress");
+        eventManager.addEventListener(document,"keypress", function(event) {
+            if (event.key === "Enter") {
+                if (isElementVisibleToUser(userpasswordsubmitBTN)) {
+                    userpasswordsubmitBTN.click();
+                }
+            }
+        });
+    }
+
+
     // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
-    document.getElementById("userPasswordEditButton").addEventListener("click", async () => {
+    userpasswordsubmitBTN.addEventListener("click", async () => {
         try {
             const password = document.getElementById('passwordEditInput').value;
             const repassword = document.getElementById('passwordEditReInput').value;
@@ -905,11 +1053,41 @@ function passwordAutonticationSection(event) {
     document.body.insertAdjacentHTML('beforeend', UIComponents.userAuthonticationSection);
     // document.getElementsByTagName('body')[0].innerHTML += UIComponents.userAuthonticationSection;
     document.getElementById('athonticationPasswordSubmit').setAttribute('data',userData);
+
+    passwordsubmitBTN = document.querySelector("#athonticationPasswordSubmit");
+    document.querySelector("#checkpasswordInput").focus();
+
+    if (isElementVisibleToUser(passwordsubmitBTN)) {
+        eventManager.removeAllEventListeners(document,"keypress");
+        eventManager.addEventListener(document,"keypress", function(event) {
+            if (event.key === "Enter") {
+                if (isElementVisibleToUser(passwordsubmitBTN)) {
+                    passwordsubmitBTN.click();
+                }
+            }
+        });
+    }
 }
 
 function addDocument() {
     loadUI("renderContainer","document_upload");
     hideShow('userButtonDropbox','hide');
+
+    uploadCollectionBTN = document.querySelector("#docUplordSectionUplordButton");
+    uploadCollectionBTN.focus();
+    
+    if (isElementVisibleToUser(uploadCollectionBTN)) {
+        eventManager.removeAllEventListeners(document,"keypress");
+        eventManager.addEventListener(document,"keypress", function(event) {
+            if (event.key === "Enter") {
+                if (isElementVisibleToUser(uploadCollectionBTN)) {
+                    uploadCollectionBTN.click();
+                }
+            }
+        });
+    }
+
+    
 }
 
 function getFileExtension(filename) {
@@ -939,13 +1117,22 @@ async function messageSection(collectionName) {
             </div>
         </li>\n
         `).join("");
-    document.getElementById('messageBox').innerHTML = `<input type="text" class="messageInput" id="messageInput" placeholder="Type your question" onclick="this.focus()">` + document.getElementById('messageBox').innerHTML;
 
-    document.getElementById('messageInput').addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            submitQuery();
-        }
-    });
+    inputMessageBox = document.getElementById('messageBox');
+    inputMessageBox.innerHTML = `<input type="text" class="messageInput" id="messageInput" placeholder="Type your question">` + inputMessageBox.innerHTML;
+    
+    if (isElementVisibleToUser(inputMessageBox)) {
+        eventManager.removeAllEventListeners(document,"keypress");
+        eventManager.addEventListener(document,"keypress", function(event) {
+            if (event.key === "Enter") {
+                if (isElementVisibleToUser(inputMessageBox)) {
+                    submitQuery();
+                }
+            }
+        });
+    }
+    
+
 
     // Add event listeners to each tag
     const fileElements = Array.from(document.getElementsByClassName("file-item"));
@@ -1083,9 +1270,24 @@ function sideBar(visibility) {
         document.getElementById('sideContainer').style.width = '20%';
         document.getElementById('bodeContainer').style.width = '60%';  // Note: Possible typo 'bode' instead of 'body'
         hideShow('userButtonDropbox', 'hide');
+        
+        // Start fileList animation
+        document.getElementById('fileList').style.opacity = '0';
         document.getElementById('fileList').style.display = 'block';
+
+        // Start fileList animation
+        document.getElementById('sidebarAddFileButton').style.opacity = '0';
         document.getElementById('sidebarAddFileButton').style.display = 'block';
-        document.getElementById('sideBar').style.borderRight = '1px solid #ccc'; // Fixed CSS property name and added value
+        
+        // Use setTimeout to create animation effect after a tiny delay
+        setTimeout(() => {
+            document.getElementById('fileList').style.opacity = '100%';
+            document.getElementById('sideBar').style.borderRight = '1px solid #cccccc';
+            document.getElementById('sidebarAddFileButton').style.opacity = '100%';
+        }, 10);
+        
+        
+        
         document.querySelectorAll('.file-title').forEach(file => {
             file.classList.remove('hidden');
         });
@@ -1095,14 +1297,27 @@ function sideBar(visibility) {
         document.getElementById('sideContainer').style.width = '6%';
         document.getElementById('bodeContainer').style.width = '75%';  // Possible typo 'bode' instead of 'body'
         hideShow('userButtonDropbox', 'hide');
-        document.getElementById('fileList').style.display = 'none';
-        document.getElementById('sidebarAddFileButton').style.display = 'none';
-        document.getElementById('sideBar').style.borderRight = 'none'; // Fixed CSS property and provided proper value
+        
+        // Start fading out the fileList
+        document.getElementById('fileList').style.opacity = '0';
+        document.getElementById('sidebarAddFileButton').style.opacity = '0';
+        
+        // Wait for the fade out animation to complete before hiding
+        setTimeout(() => {
+            document.getElementById('fileList').style.display = 'none';
+            document.getElementById('sideBar').style.borderRight = '1px solid #cccccc00';
+            document.getElementById('sidebarAddFileButton').style.display = 'none';
+        }, 300); // Match this to your CSS transition duration
+        
+        
+        
         document.querySelectorAll('.file-title').forEach(file => {
             file.classList.add('hidden');
         });
     }
 }
+
+
 async function showSuggestionsCallection() {
     const input = document.getElementById("collectionSelect");
     const query = input.value.toLowerCase();
@@ -1399,6 +1614,55 @@ async function getDatabase() {
     }
 }
 
+function isElementVisibleToUser(element) {
+    // 1. Basic existence check
+    if (!element) return false;
+    
+    // 2. Check computed style properties
+    const style = window.getComputedStyle(element);
+    if (style.display === 'none' || 
+        style.visibility === 'hidden' || 
+        style.opacity === '0') {
+      return false;
+    }
+    
+    // 3. Check if element has dimensions
+    const rect = element.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      return false;
+    }
+    
+    // 4. Check if element is in viewport
+    if (rect.bottom < 0 || rect.top > window.innerHeight ||
+        rect.right < 0 || rect.left > window.innerWidth) {
+      return false;
+    }
+    
+    // 5. Check if element is covered by other elements (overlay check)
+    // Get the center point of the element
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Get the element at this point (the topmost element)
+    const elementAtPoint = document.elementFromPoint(centerX, centerY);
+    
+    // Check if our element or one of its children is the topmost element
+    return element.contains(elementAtPoint) || element === elementAtPoint;
+}
+
+function checkMessageBoxVisibility() {
+    const messageBox = document.querySelector("#messageBox");
+    const isVisible = isElementVisibleToUser(messageBox);
+    
+    if (isVisible) {
+      console.log("MessageBox is visible to the user");
+      document.addEventListener('keypress', handleKeyPress);
+    } else {
+      console.log("MessageBox is hidden or covered by an overlay");
+      document.removeEventListener('keypress', handleKeyPress);
+    }
+}
+
 async function submitQuery() {
     const query = document.getElementById('messageInput').value;
     const collection = document.getElementById('chatTitle').innerText; // or add separate collection selection if needed
@@ -1413,7 +1677,7 @@ async function submitQuery() {
     formData.append('collection', collection);
 
     document.getElementById('resultDisplay').innerHTML = `<img src="../public/icons/think.png" class="ai-thinking">`;
-
+    document.getElementById('messageInput').value = '';
     try {
         const response = await fetch('http://127.0.0.1:5000/query', {
             method: 'POST',
@@ -1421,7 +1685,6 @@ async function submitQuery() {
         });
         const result = await response.json();
         document.getElementById('resultDisplay').innerHTML = `${result.response || result.error}`;
-        document.getElementById('messageInput').value = '';
     } catch (error) {
         console.error("Error submitting query:", error);
         //alert("Query failed. See console for details.");

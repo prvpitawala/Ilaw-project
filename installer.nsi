@@ -83,7 +83,7 @@ Section "Install"
     # It might be something like Rag Doc System.exe or RagDocSystem.exe in the install dir
     CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\Ilaw System.exe" "" "$INSTDIR\icon.ico" 0
     CreateShortcut "$SMPROGRAMS\${APP_NAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-    CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\Ilaw System.exe" "" "$INSTDIR\icon.ico" 0
+    CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\Ilaw App.exe" "" "$INSTDIR\icon.ico" 0
     
     # Create Startup Batch File
     FileOpen $0 "$INSTDIR\startup.bat" "w"
