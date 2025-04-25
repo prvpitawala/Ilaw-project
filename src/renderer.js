@@ -380,6 +380,91 @@ const eventManager = {
     }
 };
 
+
+// notification section
+
+function showNotification(type, title, content, showingTimeMS) {
+    const container = document.getElementById('notification-container');
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    // Create notification structure
+    notification.innerHTML = `
+        <div class="notification-header">
+            <div class="notification-title">${title}</div>
+            <span class="notification-close">&times;</span>
+        </div>
+        <div class="notification-content" title="${content}">${content}</div>
+    `;
+    
+    // Add to container
+    container.appendChild(notification);
+    
+    // Show notification with slight delay for animation
+    setTimeout(() => {
+        notification.classList.add('visible');
+    }, 10);
+    
+    // Close button functionality
+    const closeButton = notification.querySelector('.notification-close');
+    closeButton.addEventListener('click', () => {
+        closeNotification(notification);
+    });
+    
+    // Auto close after specified time, unless hovered
+    let timeoutId;
+    
+    const startAutoCloseTimer = () => {
+        timeoutId = setTimeout(() => {
+            closeNotification(notification);
+        }, showingTimeMS);
+    };
+    
+    startAutoCloseTimer();
+    
+    // Pause auto close on hover
+    notification.addEventListener('mouseenter', () => {
+        clearTimeout(timeoutId);
+    });
+    
+    // Resume auto close when mouse leaves
+    notification.addEventListener('mouseleave', () => {
+        startAutoCloseTimer();
+    });
+}
+
+function closeNotification(notification) {
+    notification.classList.remove('visible');
+    
+    // Wait for animation to complete before removing
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.parentElement.removeChild(notification);
+        }
+    }, 400); // Match the CSS transition time
+}
+
+
+// other section 
+
+function addKeyEventInElement(addEventElement, visibleElement, keyName) {
+    if (visibleElement) {    
+        if (isElementVisibleToUser(visibleElement)) {
+            eventManager.removeAllEventListeners(addEventElement,"keypress");
+            eventManager.addEventListener(addEventElement,"keypress", function(event) {
+                if (event.key === keyName) {
+                    if (isElementVisibleToUser(visibleElement)) {
+                        event.preventDefault();
+                        visibleElement.click();
+                    }
+                }
+            });
+        }
+    }
+}
+
 function pageUpdater(cPage) {
     previouspage = curruntpage;
     curruntpage = cPage;
@@ -731,19 +816,7 @@ async function collectionDocumentUpdateSection() {
 
     collectionSectionUpdateBTN = document.getElementById('collectionDocumentUploadSectionContainer');
     collectionSectionUpdateBTN.focus();
-
-    if (isElementVisibleToUser(collectionSectionUpdateBTN)) {
-        eventManager.removeAllEventListeners(document,"keypress");
-        eventManager.addEventListener(document,"keypress", function(event) {
-            if (event.key === "Enter") {
-                if (isElementVisibleToUser(collectionSectionUpdateBTN)) {
-                    collectionSectionUpdateBTN.click();
-                }
-            }
-        });
-    }
-    
-
+    addKeyEventInElement(document, collectionSectionUpdateBTN, "Enter");
 }
 
 async function updateCollectionDocuments(event) {
@@ -754,13 +827,15 @@ async function updateCollectionDocuments(event) {
 
     if (!fileInput.files.length) {
         //alert("Please select at least one file.");
-        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Not any file is picked">Error</span>`;
+        showNotification('Error', 'Empty Inputs', 'Not any file is picked', 3000);
+        // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Not any file is picked">Error</span>`;
         return;
     }
 
     // Check if collection name is empty
     if (!collectionName || collectionName.trim() === '') {
-        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="No collection selected">Error</span>`;
+        showNotification('Error', 'Empty Inputs', 'Not any No collection selected is picked', 3000);
+        // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="No collection selected">Error</span>`;
         return;
     }
 
@@ -782,7 +857,8 @@ async function updateCollectionDocuments(event) {
 
     // Optional: Show error message if invalid extensions were found
     if (hasInvalidExtension) {
-        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Invalid file type detected in : ${invalidefilename}">Error</span>`;
+        showNotification('Error', 'Invalid Type Inputs', `Invalid file type detected in : ${invalidefilename}`, 3000);
+        // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Invalid file type detected in : ${invalidefilename}">Error</span>`;
         return;
     }
     
@@ -811,8 +887,8 @@ async function updateCollectionDocuments(event) {
             //alert(`Upload failed: ${result.error}`);
         }
     } catch (error) {
-        console.error("Error uploading files:", error);
-        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="${error}">Error</span>`;
+        showNotification('Error', 'Other Error',`${error}`, 3000);
+        // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="${error}">Error</span>`;
         //alert("Upload failed. See console for details.");
     }
 }
@@ -893,16 +969,7 @@ function userNameEditSection() {
     usernamesubmitBTN = document.getElementById("userNameEditButton");
     document.querySelector("#nameEditInput").focus();
 
-    if (isElementVisibleToUser(usernamesubmitBTN)) {
-        eventManager.removeAllEventListeners(document,"keypress");
-        eventManager.addEventListener(document,"keypress", function(event) {
-            if (event.key === "Enter") {
-                if (isElementVisibleToUser(usernamesubmitBTN)) {
-                    usernamesubmitBTN.click();
-                }
-            }
-        });
-    }
+    addKeyEventInElement(document, usernamesubmitBTN, "Enter");
 
     // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
     usernamesubmitBTN.addEventListener("click", async () => {
@@ -950,16 +1017,7 @@ async function userAPIKeyEditSection() {
     userapisubmitBTN = document.getElementById("userApikeyEditButton");
     document.querySelector("#chatGPTapikeyEditInput").focus();
 
-    if (isElementVisibleToUser(userapisubmitBTN)) {
-        eventManager.removeAllEventListeners(document,"keypress");
-        eventManager.addEventListener(document,"keypress", function(event) {
-            if (event.key === "Enter") {
-                if (isElementVisibleToUser(userapisubmitBTN)) {
-                    userapisubmitBTN.click();
-                }
-            }
-        });
-    }
+    addKeyEventInElement(document, userapisubmitBTN, "Enter");
 
     userapisubmitBTN.addEventListener("click", async () => {
         try {
@@ -1001,17 +1059,7 @@ function userPasswordEditSection() {
     userpasswordsubmitBTN = document.getElementById("userPasswordEditButton");
     document.querySelector("#passwordEditInput").focus();
 
-    if (isElementVisibleToUser(userpasswordsubmitBTN)) {
-        eventManager.removeAllEventListeners(document,"keypress");
-        eventManager.addEventListener(document,"keypress", function(event) {
-            if (event.key === "Enter") {
-                if (isElementVisibleToUser(userpasswordsubmitBTN)) {
-                    userpasswordsubmitBTN.click();
-                }
-            }
-        });
-    }
-
+    addKeyEventInElement(document, userpasswordsubmitBTN, "Enter");
 
     // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
     userpasswordsubmitBTN.addEventListener("click", async () => {
@@ -1057,16 +1105,8 @@ function passwordAutonticationSection(event) {
     passwordsubmitBTN = document.querySelector("#athonticationPasswordSubmit");
     document.querySelector("#checkpasswordInput").focus();
 
-    if (isElementVisibleToUser(passwordsubmitBTN)) {
-        eventManager.removeAllEventListeners(document,"keypress");
-        eventManager.addEventListener(document,"keypress", function(event) {
-            if (event.key === "Enter") {
-                if (isElementVisibleToUser(passwordsubmitBTN)) {
-                    passwordsubmitBTN.click();
-                }
-            }
-        });
-    }
+    addKeyEventInElement(document, passwordsubmitBTN, "Enter");
+
 }
 
 function addDocument() {
@@ -1075,18 +1115,8 @@ function addDocument() {
 
     uploadCollectionBTN = document.querySelector("#docUplordSectionUplordButton");
     uploadCollectionBTN.focus();
-    
-    if (isElementVisibleToUser(uploadCollectionBTN)) {
-        eventManager.removeAllEventListeners(document,"keypress");
-        eventManager.addEventListener(document,"keypress", function(event) {
-            if (event.key === "Enter") {
-                if (isElementVisibleToUser(uploadCollectionBTN)) {
-                    uploadCollectionBTN.click();
-                }
-            }
-        });
-    }
 
+    addKeyEventInElement(document, uploadCollectionBTN, "Enter");
     
 }
 
@@ -1121,18 +1151,13 @@ async function messageSection(collectionName) {
     inputMessageBox = document.getElementById('messageBox');
     inputMessageBox.innerHTML = `<input type="text" class="messageInput" id="messageInput" placeholder="Type your question">` + inputMessageBox.innerHTML;
     
-    if (isElementVisibleToUser(inputMessageBox)) {
-        eventManager.removeAllEventListeners(document,"keypress");
-        eventManager.addEventListener(document,"keypress", function(event) {
-            if (event.key === "Enter") {
-                if (isElementVisibleToUser(inputMessageBox)) {
-                    submitQuery();
-                }
-            }
-        });
-    }
-    
+    messageInput = document.querySelector("#messageInput");
+    messageInput.focus();
 
+
+    messageSendBTN = document.getElementById("chatSendButton");
+
+    addKeyEventInElement(document, messageSendBTN, "Enter");
 
     // Add event listeners to each tag
     const fileElements = Array.from(document.getElementsByClassName("file-item"));
@@ -1487,13 +1512,15 @@ async function uploadDocument() {
 
     if (!fileInput.files.length) {
         //alert("Please select at least one file.");
-        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Not any file is picked">Error</span>`;
+        showNotification('Error', 'Empty Inputs', 'Not any file is picked', 3000);
+        // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Not any file is picked">Error</span>`;
         return;
     }
 
     // Check if collection name is empty
     if (!collection || collection.trim() === '') {
-        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="No collection selected">Error</span>`;
+        showNotification('Error', 'Empty Inputs', 'Not any No collection selected is picked', 3000);
+        // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="No collection selected">Error</span>`;
         return;
     }
 
@@ -1515,7 +1542,8 @@ async function uploadDocument() {
 
     // Optional: Show error message if invalid extensions were found
     if (hasInvalidExtension) {
-        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Invalid file type detected in : ${invalidefilename}">Error</span>`;
+        showNotification('Error', 'Invalid Type Inputs', `Invalid file type detected in : ${invalidefilename}`, 3000);
+        // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Invalid file type detected in : ${invalidefilename}">Error</span>`;
         return;
     }
     
@@ -1544,8 +1572,8 @@ async function uploadDocument() {
             //alert(`Upload failed: ${result.error}`);
         }
     } catch (error) {
-        console.error("Error uploading files:", error);
-        document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="${error}">Error</span>`;
+        showNotification('Error', 'Other Error',`${error}`, 3000);
+        // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="${error}">Error</span>`;
         //alert("Upload failed. See console for details.");
     }
 }
