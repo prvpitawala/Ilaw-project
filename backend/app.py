@@ -813,7 +813,7 @@ def get_response(quaryText, collection):
         # Get the final response
         prompt_to_llm = format_Prompt_to_LLM(3, retrived_doc_list, quaryText)
         print("ChatGPT promt :\n", prompt_to_llm)
-        chatGPT_system_prompt = "Work as assistant. Provide answers only using the given context. Give explainable answers. don't tell you are providing answers from context this is a must. Please use markdown formatting in your responses"
+        chatGPT_system_prompt = "You are an AI assistant. Answer all questions strictly based on the provided context. If the answer is not available within the context, politely apologize without attempting to fabricate information. Provide clear and explainable answers. Never mention that your responses are based on the context — this is mandatory. Format all responses using Markdown for better readability."
         # Prompt_for_llm = create_prompt_with_tagged_contexts(retrived_doc_list, user_message, 2)
         #Prompt_for_llm = f'<context>\n\n{retrived_doc_list[0]}\n\n</context>\n\n' + "User message : " + user_message
      

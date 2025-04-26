@@ -133,7 +133,7 @@ def get_documents_from_folder(folder_path: str) -> Dict[str, str]:
                 # Handle odt files
                 elif file_.endswith('.odt'):
                     doc = load(file_path)
-                    content = teletype.extractText(doc)
+                    content = teletype.extractText(doc.text)
                     documents[txt_filename] = content
                     
             except Exception as e:

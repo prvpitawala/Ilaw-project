@@ -888,11 +888,11 @@ async function deleteCollection(letter) {
         const result = await response.json();
 
         if (response.ok) {
-            showNotification("Done", `The collection has been deleted \nName : ${letter}`, '', 3000);
+            showNotification("Done", `The collection has been deleted`, '', 3000);
             dashboard()
             return  // Call dashboard function if upload is successful
         } else {
-            showNotification("Error", `Unable to delete collection \nName : ${collectionName}`, response, 3000);
+            showNotification("Error", `Unable to delete collection`, response, 3000);
         }
     } catch (error) {
         showNotification("Error", "Other error", error, 3000);
@@ -925,10 +925,10 @@ async function updateLlmModel(modelName) {
         const result = await response.json();
 
         if (response.ok) {
-            showNotification("Done", `LLM model changed to ${modelName}`, '', 3000);
+            showNotification("Done", `LLM model has been changed`, '', 3000);
             return  // Call dashboard function if upload is successful
         } else {
-            showNotification("Error", `LLM model not changed to ${modelName}`, response, 3000);
+            showNotification("Error", `Unable to change LLM model`, response, 3000);
         }
     } catch (error) {
         showNotification("Error", "Other error", error, 3000);
@@ -1493,11 +1493,11 @@ async function deleteFile(filename,collectionname) {
         const result = await response.json();
 
         if (response.ok) {
-            showNotification("Done", `The file has been deleted \nName : ${filename}`, '', 3000);
+            showNotification("Done", `The file has been deleted`, '', 3000);
             return messageSection(collectionname);
               // Call dashboard function if upload is successful
         } else {
-            showNotification("Error", `Unable to delete file \nName : ${filename}`, response, 3000);
+            showNotification("Error", `Unable to delete file`, response, 3000);
         }
     } catch (error) {
         showNotification("Error", "Other error", error, 3000);
@@ -1823,10 +1823,10 @@ async function uploadDocument() {
         const result = await response.json();
 
         if (response.ok) {
-            showNotification("Done", `Collection added successfully \nName : ${collection}`, '', 3000);
+            showNotification("Done", `Collection added successfully`, '', 3000);
             dashboard();  // Call dashboard function if upload is successful
         } else {
-            showNotification("Error", `Unable to add collection \nName : ${collection}`, response, 3000);
+            showNotification("Error", `Unable to add collection`, response, 3000);
             
         }
     } catch (error) {

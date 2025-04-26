@@ -40,7 +40,8 @@
       "!venv/*",
       "!files/*",
       "!rag_app.spec",
-      "!installer.nsi"
+      "!installer.nsi",
+      "!Ilaw System-Setup-1.0.0.exe"
     ],
     "win": {
       "target": "nsis",
