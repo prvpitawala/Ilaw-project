@@ -128,7 +128,7 @@ Section "Uninstall"
     
     # Kill app.exe and Ilaw System.exe processes using taskkill
     ExecWait 'taskkill /f /im "Ilaw_System.exe" /t' $0
-    ExecWait 'taskkill /f /im "Ilaw System.exe" /t' $0
+    ExecWait 'taskkill /f /im "Ilaw App.exe" /t' $0
     
     # Wait a moment to ensure processes are terminated
     Sleep 1000
