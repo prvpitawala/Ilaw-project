@@ -1726,22 +1726,62 @@ function displayFileNames() {
     }
 }
 
+function validateCollectionName(name) {
+    // Check for length requirements (3-63 characters)
+    if (name.length < 3 || name.length > 63) {
+        return {
+            isValid: false,
+            error: "Collection name must be between 3 and 63 characters long."
+        };
+    }
+    
+    // Check that it only contains allowed characters [a-zA-Z0-9._-]
+    const validCharsRegex = /^[a-zA-Z0-9._-]+$/;
+    if (!validCharsRegex.test(name)) {
+        return {
+            isValid: false,
+            error: "Collection name can only contain letters, numbers, periods, underscores, and hyphens."
+        };
+    }
+    
+    // Check that it starts and ends with alphanumeric characters [a-zA-Z0-9]
+    const validStartEndRegex = /^[a-zA-Z0-9].*[a-zA-Z0-9]$/;
+    if (!validStartEndRegex.test(name)) {
+        return {
+            isValid: false, 
+            error: "Collection name must start and end with a letter or number."
+        };
+    }
+    
+    // If all checks pass
+    return {
+        isValid: true,
+        error: null
+    };
+}
+
 async function uploadDocument() {
     const fileInput = document.getElementById('fileInput');
     const collection = document.getElementById('collectionSelect').value;
 
     if (!fileInput.files.length) {
         //alert("Please select at least one file.");
-        showNotification('Error', 'Empty Inputs', 'Not any file is picked', 3000);
+        showNotification('Error', 'Empty Inputs', 'No any file is picked', 3000);
         // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Not any file is picked">Error</span>`;
         return;
     }
 
     // Check if collection name is empty
     if (!collection || collection.trim() === '') {
-        showNotification('Error', 'Empty Inputs', 'Not any No collection selected is picked', 3000);
+        showNotification('Error', 'Empty Inputs', 'No any collection name is given', 3000);
         // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="No collection selected">Error</span>`;
         return;
+    }
+
+    if (!(validateCollectionName(collection).isValid)) {
+        validationResult = validateCollectionName(collection);
+        showNotification('Error', 'Invalid Collection Name', validationResult.error, 3000);
+        return
     }
 
     // List of allowed file extensions
@@ -1787,10 +1827,10 @@ async function uploadDocument() {
         const result = await response.json();
 
         if (response.ok) {
-            showNotification("Done", `Add Collection Successfully \nName : ${collectionName}`, '', 3000);
+            showNotification("Done", `Add Collection Successfully \nName : ${collection}`, '', 3000);
             dashboard();  // Call dashboard function if upload is successful
         } else {
-            showNotification("Error", `Add Collection UnSuccessful \nName : ${collectionName}`, response, 3000);
+            showNotification("Error", `Add Collection UnSuccessful \nName : ${collection}`, response, 3000);
             
         }
     } catch (error) {
