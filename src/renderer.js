@@ -61,7 +61,7 @@ const UIComponents = {
                 
                 <input type="file" id="fileInput" style="display: none;" accept=".txt,.pdf,.docx,.odt" multiple onchange="displayFileNames()">
             </div>
-            <div class="file-format">Supported file format (txt, PDF, DOCX, ODT)</div>
+            <div class="file-format">Supported file format (TXT, PDF, DOCX, ODT)</div>
         </div>
         <div class="collection-name-section">
             <div class="label">Collection Name</div>
@@ -270,7 +270,7 @@ const UIComponents = {
                         <div class="file-text" id="fileNamesText">Drag the files or Paste the files</div>
                         <input type="file" id="fileInput" style="display: none;" accept=".txt,.pdf,.docx,.odt" multiple onchange="displayFileNames()">
                     </div>
-                    <div class="file-format">Supported file format (txt, PDF, DOCX, ODT)</div>
+                    <div class="file-format">Supported file format (TXT, PDF, DOCX, ODT)</div>
                 </div>
                 <div>
                     <div class="label">Collection Name</div>
@@ -656,27 +656,14 @@ window.onload = async function() {
         dashboard();
     } else {
         loadUI("renderContainer","registerPages");   
+        // user name input part (input element focus and key event trigged)
         document.querySelector("#nameInput").focus();
+        addKeyEventInElement(document,document.querySelector(`#page1`).querySelector("button"),"Enter");
     }
  
     // Initialize custom context menu
     contextMenuController = initCustomContextMenu();
     
-    // register btn enter part
-    try {
-        const reg_inputs = Array.from(document.getElementsByClassName("reg-btns"));
-
-        reg_inputs.forEach(btn => {
-            btn.addEventListener("keypress", function(event) {
-                if (event.key === "Enter") {
-                    if (btn.parentElement.classList.contains('active')) {
-                        btn.parentElement.querySelector('button').click();
-                    }
-                }
-            });
-        });
-    } catch {}
-
     addContextMenuToInputs()
 };
 
@@ -723,6 +710,13 @@ function nextPage(pageNumber) {
     document.getElementById(`page${pageNumber}`).classList.add('active');
 
     document.querySelector(`#page${pageNumber}`).querySelector("input").focus();
+
+    addKeyEventInElement(document,document.querySelector(`#page${pageNumber}`).querySelector("button"),"Enter");
+
+    if (document.querySelector(`#page${pageNumber -1}`).querySelector('input').value === '') {
+        showNotification('Error', 'Empty inputs', 'Input your details', 3000);
+        nextPage(pageNumber-1);
+    }
 }
 
 function hideShow(id,visibility) {
@@ -742,7 +736,8 @@ async function register() {
     const ChatGPTApiKeyInput = document.getElementById('chatgptApiKeyInput').value;
 
     if(!ChatGPTApiKeyInput){
-        return nextPage(1);
+        showNotification('Error', 'Empty inputs', 'Input your API Key', 3000);
+        return nextPage(3);
     }
 
     const formData = new FormData();
@@ -759,14 +754,16 @@ async function register() {
             body: formData,
         });
         const result = await response.json();
-        username = (await getProfile()).userName;
-        document.body.insertAdjacentHTML('beforeend', UIComponents.userbutton);
-        // document.getElementsByTagName('body')[0].innerHTML += UIComponents.;
-        document.getElementById('user-button').innerHTML = `<font class="user-title">${username[0].toUpperCase()}${username[1]}</font>`;
-        dashboard();
+        if (response.ok) {
+            showNotification("Done", `Registration successful`, '', 3000);
+            loadUserButton(await getProfile());
+            dashboard();
+        } else {
+            showNotification("Error", `Registration error`, response, 3000); 
+            nextPage(1);
+        }
     } catch (error) {
-        console.error("Error uploading file:", error);
-        //alert("Upload failed. See console for details.");
+        showNotification('Error', 'Other error',`${error}`, 3000);
         nextPage(1);
     }
 }
@@ -891,20 +888,19 @@ async function deleteCollection(letter) {
         const result = await response.json();
 
         if (response.ok) {
-            showNotification("Done", `Delete Collection Successfully \nName : ${letter}`, '', 3000);
+            showNotification("Done", `The collection has been deleted \nName : ${letter}`, '', 3000);
             dashboard()
             return  // Call dashboard function if upload is successful
         } else {
-            showNotification("Error", `Delete Collection UnSuccessful \nName : ${collectionName}`, response, 3000);
+            showNotification("Error", `Unable to delete collection \nName : ${collectionName}`, response, 3000);
         }
     } catch (error) {
-        showNotification("Error", "Other Error", error, 3000);
+        showNotification("Error", "Other error", error, 3000);
     }
 }
 
 async function dashboard() {
     hideShow('sideContainer','hide');
-    // pageUpdater('dashbord');
     loadUI("renderContainer","collection_selector");
     try {
         document.getElementById('fileList').innerHTML = '';
@@ -929,13 +925,13 @@ async function updateLlmModel(modelName) {
         const result = await response.json();
 
         if (response.ok) {
-            showNotification("Done", `LLM Model changed to ${modelName}`, '', 3000);
+            showNotification("Done", `LLM model changed to ${modelName}`, '', 3000);
             return  // Call dashboard function if upload is successful
         } else {
-            showNotification("Error", `LLM Model not changed to ${modelName}`, response, 3000);
+            showNotification("Error", `LLM model not changed to ${modelName}`, response, 3000);
         }
     } catch (error) {
-        showNotification("Error", "Other Error", error, 3000);
+        showNotification("Error", "Other error", error, 3000);
     }
 }
 
@@ -1010,7 +1006,7 @@ async function setting() {
             if (swhMod === "chatGPT") {
                 updateLlmModel("chatGPT");
             } else {
-                showNotification("Error", `Unable to Change`, `Switching to ${swhMod} is not supported at this stage. \nThis feature will be implemented in Stage 3.`, 3000);
+                showNotification("Error", `Unable to change`, `Switching to ${swhMod} is not supported at this stage. \nThis feature will be implemented in Stage 3.`, 3000);
                 swh.parentElement.querySelector('.switch-head').classList.remove('inactive');
                 swh.parentElement.querySelector('.switch-head').classList.remove('active');
                 swh.parentElement.querySelector('.switch-head').classList.add('inactive');
@@ -1040,14 +1036,14 @@ async function updateCollectionDocuments(event) {
 
     if (!fileInput.files.length) {
         //alert("Please select at least one file.");
-        showNotification('Error', 'Empty Inputs', 'Not any file is picked', 3000);
+        showNotification('Error', 'Empty inputs', 'No file selected', 3000);
         // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Not any file is picked">Error</span>`;
         return;
     }
 
     // Check if collection name is empty
     if (!collectionName || collectionName.trim() === '') {
-        showNotification('Error', 'Empty Inputs', 'Not any No collection selected is picked', 3000);
+        showNotification('Error', 'Empty inputs', 'Collection name is empty', 3000);
         // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="No collection selected">Error</span>`;
         return;
     }
@@ -1070,7 +1066,7 @@ async function updateCollectionDocuments(event) {
 
     // Optional: Show error message if invalid extensions were found
     if (hasInvalidExtension) {
-        showNotification('Error', 'Invalid Type Inputs', `Invalid file type detected in : ${invalidefilename}`, 3000);
+        showNotification('Error', 'Invalid type inputs', `Invalid file type detected in : ${invalidefilename}`, 3000);
         // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Invalid file type detected in : ${invalidefilename}">Error</span>`;
         return;
     }
@@ -1095,13 +1091,13 @@ async function updateCollectionDocuments(event) {
         const result = await response.json();
 
         if (response.ok) {
-            showNotification("Done", `Add file Successfully`, '', 3000);
+            showNotification("Done", `File uploaded successfully`, '', 3000);
             backToMessage(myevent);  // Call dashboard function if upload is successful
         } else {
-            showNotification("Error", `Add file UnSuccessful`, response, 3000);
+            showNotification("Error", `File upload error`, response, 3000);
         }
     } catch (error) {
-        showNotification('Error', 'Other Error',`${error}`, 3000);
+        showNotification('Error', 'Other error',`${error}`, 3000);
     }
 }
 
@@ -1139,7 +1135,7 @@ async function userDataEditSection(event) {
     var Section = document.querySelector(`.user-password-Authontication-section`);
     const password = document.getElementById('checkpasswordInput').value;
     if (password == '') {
-        showNotification("Error", "Empty Password", "", 3000);
+        showNotification("Error", "Password cannot be empty", "", 3000);
         Section.parentNode.removeChild(Section);
         return;
     }
@@ -1162,7 +1158,7 @@ async function userDataEditSection(event) {
                     break;
         }
     } else {
-        showNotification("Error", "Incorrect Password",'', 3000);
+        showNotification("Error", "Incorrect password",'', 3000);
     }
 }
 
@@ -1189,7 +1185,7 @@ function userNameEditSection() {
                 const result = await response.json();
 
                 if (response.ok) {
-                    showNotification("Done", "User Name changed", '', 3000);
+                    showNotification("Done", "User name has been changed", '', 3000);
                     var settingSection = document.querySelector(`.user-setting-section`);
                     if (settingSection) {
                         settingSection.parentNode.removeChild(settingSection);
@@ -1201,11 +1197,11 @@ function userNameEditSection() {
                         editSection.parentNode.removeChild(editSection);
                     }
                 } else {
-                    showNotification("Error", "User Name not change", response, 3000);
+                    showNotification("Error", "Unable to change username", response, 3000);
                 }
             }
         } catch (error) {
-            showNotification("Error", "Other Error", error, 3000);
+            showNotification("Error", "Other error", error, 3000);
         }
     });
 
@@ -1241,17 +1237,17 @@ async function userAPIKeyEditSection() {
                 const result = await response.json();
 
                 if (response.ok) {
-                    showNotification("Done", "API Key changed", '', 3000);
+                    showNotification("Done", "API key has been changed", '', 3000);
                     var editSection = document.querySelector(`.user-apikey-edit-section`);
                     if (editSection) {
                         editSection.parentNode.removeChild(editSection);
                     }
                 } else {
-                    showNotification("Error", "API Key not change", response, 3000);
+                    showNotification("Error", "Unable to change API key", response, 3000);
                 }
             }
         } catch (error) {
-            showNotification("Error", "Other Error", error, 3000);
+            showNotification("Error", "Other error", error, 3000);
         }
     });
     // chatGPTapikeyEditInput , geminiapikeyEditInput
@@ -1286,23 +1282,23 @@ function userPasswordEditSection() {
                     const result = await response.json();
     
                     if (response.ok) {
-                        showNotification("Done", "Password changed", '', 3000);
+                        showNotification("Done", "Password has been changed", '', 3000);
                         var editSection = document.querySelector(`.user-password-edit-section`);
                         if (editSection) {
                             editSection.parentNode.removeChild(editSection);
                         }
                     } else {
-                        showNotification("Error", "Other Error", response, 3000);
+                        showNotification("Error", "Other error", response, 3000);
                     }
                 } else {
-                    showNotification("Error", "Password Mismatch", '', 3000);
+                    showNotification("Error", "Password mismatch detected", '', 3000);
                 }
             } else {
-                showNotification("Error", "Empty Password", '', 3000);
+                showNotification("Error", "Password cannot be empty", '', 3000);
             } 
         } catch (error) {
             console.log(error);
-            showNotification("Error", "Other Error", error, 3000);
+            showNotification("Error", "Other error", error, 3000);
         }
     });
 
@@ -1497,14 +1493,14 @@ async function deleteFile(filename,collectionname) {
         const result = await response.json();
 
         if (response.ok) {
-            showNotification("Done", `Delete File Successfully \nName : ${filename}`, '', 3000);
+            showNotification("Done", `The file has been deleted \nName : ${filename}`, '', 3000);
             return messageSection(collectionname);
               // Call dashboard function if upload is successful
         } else {
-            showNotification("Error", `Delete File UnSuccessful \nName : ${filename}`, response, 3000);
+            showNotification("Error", `Unable to delete file \nName : ${filename}`, response, 3000);
         }
     } catch (error) {
-        showNotification("Error", "Other Error", error, 3000);
+        showNotification("Error", "Other error", error, 3000);
         return;
     }
 }
@@ -1766,21 +1762,21 @@ async function uploadDocument() {
 
     if (!fileInput.files.length) {
         //alert("Please select at least one file.");
-        showNotification('Error', 'Empty Inputs', 'No any file is picked', 3000);
+        showNotification('Error', 'Empty inputs', 'No file selected', 3000);
         // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Not any file is picked">Error</span>`;
         return;
     }
 
     // Check if collection name is empty
     if (!collection || collection.trim() === '') {
-        showNotification('Error', 'Empty Inputs', 'No any collection name is given', 3000);
+        showNotification('Error', 'Empty inputs', 'Collection name is empty', 3000);
         // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="No collection selected">Error</span>`;
         return;
     }
 
     if (!(validateCollectionName(collection).isValid)) {
         validationResult = validateCollectionName(collection);
-        showNotification('Error', 'Invalid Collection Name', validationResult.error, 3000);
+        showNotification('Error', 'Invalid collection name', validationResult.error, 3000);
         return
     }
 
@@ -1802,7 +1798,7 @@ async function uploadDocument() {
 
     // Optional: Show error message if invalid extensions were found
     if (hasInvalidExtension) {
-        showNotification('Error', 'Invalid Type Inputs', `Invalid file type detected in : ${invalidefilename}`, 3000);
+        showNotification('Error', 'Invalid type inputs', `Invalid file type detected in : ${invalidefilename}`, 3000);
         // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="Invalid file type detected in : ${invalidefilename}">Error</span>`;
         return;
     }
@@ -1827,14 +1823,14 @@ async function uploadDocument() {
         const result = await response.json();
 
         if (response.ok) {
-            showNotification("Done", `Add Collection Successfully \nName : ${collection}`, '', 3000);
+            showNotification("Done", `Collection added successfully \nName : ${collection}`, '', 3000);
             dashboard();  // Call dashboard function if upload is successful
         } else {
-            showNotification("Error", `Add Collection UnSuccessful \nName : ${collection}`, response, 3000);
+            showNotification("Error", `Unable to add collection \nName : ${collection}`, response, 3000);
             
         }
     } catch (error) {
-        showNotification('Error', 'Other Error',`${error}`, 3000);
+        showNotification('Error', 'Other error',`${error}`, 3000);
     }
 }
 
