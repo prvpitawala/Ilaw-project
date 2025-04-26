@@ -36,8 +36,9 @@ import os
 from docx import Document  # python-docx for .docx files
 from pdfminer.high_level import extract_text  # Keeping existing PDF support
 
+# Modify your get_app_data_dir function to ensure it works in EXE mode
 def get_app_data_dir():
-    app_data_dir = os.path.join(os.environ['APPDATA'], "Rag Doc System")
+    app_data_dir = os.path.join(os.environ['APPDATA'], "Ilaw System")
     if not os.path.exists(app_data_dir):
         os.makedirs(app_data_dir)
     return app_data_dir

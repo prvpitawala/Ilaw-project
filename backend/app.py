@@ -42,12 +42,6 @@ def get_app_data_dir():
         os.makedirs(app_data_dir)
     return app_data_dir
 
-# def get_app_data_dir():
-#     app_data_dir = os.path.join(os.environ['APPDATA'], "Rag Doc System")
-#     if not os.path.exists(app_data_dir):
-#         os.makedirs(app_data_dir)
-#     return app_data_dir
-
 def fileFolderPathGen(relativePath):
     return os.path.join(get_app_data_dir(), relativePath)
 

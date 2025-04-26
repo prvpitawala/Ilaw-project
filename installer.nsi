@@ -126,7 +126,7 @@ Section "Uninstall"
     # Use ExecWait to kill processes
     MessageBox MB_ICONINFORMATION|MB_OK "Closing any running application processes..."
     
-    # Kill app.exe and Rag Doc System.exe processes using taskkill
+    # Kill app.exe and Ilaw System.exe processes using taskkill
     ExecWait 'taskkill /f /im "Ilaw_System.exe" /t' $0
     ExecWait 'taskkill /f /im "Ilaw System.exe" /t' $0
     
@@ -153,7 +153,7 @@ Section "Uninstall"
     Delete "$INSTDIR\icon.ico"
 
     # Remove AppData files and folders
-    RMDir /r "${APPDATA_FOLDER}"  # Remove the AppData\Roaming\Rag Doc System folder
+    RMDir /r "${APPDATA_FOLDER}"
     
     # Remove uninstaller
     Delete "$INSTDIR\uninstall.exe"
