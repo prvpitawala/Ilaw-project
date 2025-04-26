@@ -684,10 +684,10 @@ def get_document_collections():
     for collection in db_collections:
         if collection.name != "llam_app_details":
             collection_name = collection.name
-            collection_path = os.path.join(BASE_SAVE_DIR, collection_name)
+            # collection_path = os.path.join(BASE_SAVE_DIR, collection_name)
             collection_list.append(collection_name)
-            if not os.path.exists(collection_path):
-                os.makedirs(collection_path)
+            # if not os.path.exists(collection_path):
+            #     os.makedirs(collection_path)
 
     return jsonify({"message": collection_list}), 200
 

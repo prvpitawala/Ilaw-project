@@ -43,7 +43,7 @@ const UIComponents = {
     </section>`,
     userbutton:`
     <div class="user-button-section">
-        <div id="user-button" onclick="showUserDropDown()"></div>
+        <div id="user-button"></div>
         <div id="userButtonDropbox" class="user-button-dropbox hide">
             <div class="user-button-dropbox-item" onclick="setting()">Setting</div>     
         </div>
@@ -182,14 +182,6 @@ const UIComponents = {
             </div>
         </div>
     </section>`,
-    userSettingEditSection: `
-    <section class="user-password-Authontication-section">
-        <div class="user-password-Authontication-section-container">
-            <div class="back-button" id="backButton" data="user-password-Authontication-section" onclick="backTo(event)">
-                <img src="../public/icons/back-icon.png" class="back-button-img" alt="back">
-            </div>
-        </div>
-    </section>`,
     userAuthonticationSection: `
     <section class="user-password-Authontication-section">
         <div class="user-password-Authontication-section-container">
@@ -288,11 +280,19 @@ const UIComponents = {
             </div>     
         </div>
     </section>`,
+    contextMenu: `
+    <div id="custom-context-menu" class="custom-context-menu hide">
+        <div class="context-menu-item" data-action="cut">Cut</div>
+        <div class="context-menu-item" data-action="copy">Copy</div>
+        <div class="context-menu-item" data-action="paste">Paste</div>
+        <div class="context-menu-item" data-action="selectAll">Select All</div>
+    </div>`
 };
 
 var collections;
 var curruntpage; //'dashbord','message','userSetting'
 var previouspage;
+let contextMenuController;
 
 // Create a global event manager
 const eventManager = {
@@ -380,6 +380,21 @@ const eventManager = {
     }
 };
 
+function addKeyEventInElement(addEventElement, visibleElement, keyName) {
+    if (visibleElement) {    
+        if (isElementVisibleToUser(visibleElement)) {
+            eventManager.removeAllEventListeners(addEventElement,"keypress");
+            eventManager.addEventListener(addEventElement,"keypress", function(event) {
+                if (event.key === keyName) {
+                    if (isElementVisibleToUser(visibleElement)) {
+                        event.preventDefault();
+                        visibleElement.click();
+                    }
+                }
+            });
+        }
+    }
+}
 
 // notification section
 
@@ -446,24 +461,187 @@ function closeNotification(notification) {
     }, 400); // Match the CSS transition time
 }
 
-
-// other section 
-
-function addKeyEventInElement(addEventElement, visibleElement, keyName) {
-    if (visibleElement) {    
-        if (isElementVisibleToUser(visibleElement)) {
-            eventManager.removeAllEventListeners(addEventElement,"keypress");
-            eventManager.addEventListener(addEventElement,"keypress", function(event) {
-                if (event.key === keyName) {
-                    if (isElementVisibleToUser(visibleElement)) {
-                        event.preventDefault();
-                        visibleElement.click();
-                    }
-                }
+// Function to initialize the custom context menu for text inputs
+function initCustomContextMenu() {
+    // Add the context menu element to the DOM
+    document.body.insertAdjacentHTML('beforeend', UIComponents.contextMenu);
+    
+    const contextMenu = document.getElementById('custom-context-menu');
+    let activeElement = null;
+    
+    // Function to apply context menu to text inputs
+    function applyContextMenuToInputs() {
+        const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], input[type="search"], input[type="tel"], input[type="url"], textarea');
+        
+        textInputs.forEach(input => {
+            // Prevent default context menu
+            eventManager.addEventListener(input, 'contextmenu', function(e) {
+            e.preventDefault();
+            activeElement = this;
+            showContextMenu(e.clientX, e.clientY);
             });
+        });
+    }
+    
+    // Add event listeners for the context menu items
+    document.querySelectorAll('.context-menu-item').forEach(item => {
+        eventManager.addEventListener(item, 'click', function() {
+            if (!activeElement) return;
+            
+            const action = this.getAttribute('data-action');
+            executeAction(action, activeElement);
+            hideContextMenu();
+        });
+    });
+    
+    // Click outside to hide menu
+    eventManager.addEventListener(document, 'click', function(e) {
+        if (!contextMenu.contains(e.target)) {
+            hideContextMenu();
+        }
+    });
+    
+    // Key events to hide menu on Escape
+    eventManager.addEventListener(document, 'keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideContextMenu();
+        }
+    });
+    
+    // Show the context menu at the given position
+    function showContextMenu(x, y) {
+        // Ensure menu stays within viewport bounds
+        const menuWidth = 120; // Approximate width
+        const menuHeight = 150; // Approximate height
+        
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // Adjust x position if menu would go off screen
+        if (x + menuWidth > viewportWidth) {
+            x = viewportWidth - menuWidth - 5;
+        }
+        
+        // Adjust y position if menu would go off screen
+        if (y + menuHeight > viewportHeight) {
+            y = viewportHeight - menuHeight - 5;
+        }
+        
+        // Position the menu
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        
+        // Update menu options based on selection
+        updateMenuOptions();
+        
+        // Show the menu
+        contextMenu.classList.remove('hide');
+    }
+    
+    // Hide the context menu
+    function hideContextMenu() {
+        contextMenu.classList.add('hide');
+    }
+    
+    // Update menu options based on current state
+    function updateMenuOptions() {
+      const hasSelection = activeElement && 
+                          activeElement.selectionStart !== undefined && 
+                          activeElement.selectionStart !== activeElement.selectionEnd;
+      
+      document.querySelector('.context-menu-item[data-action="cut"]').style.display = 
+        hasSelection ? 'block' : 'none';
+      
+      document.querySelector('.context-menu-item[data-action="copy"]').style.display = 
+        hasSelection ? 'block' : 'none';
+    }
+    
+    // Execute the selected action
+    async function executeAction(action, element) {
+        switch(action) {
+            case 'cut':
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    try {
+                        // First copy the selected text
+                        const selectedText = element.value.substring(element.selectionStart, element.selectionEnd);
+                        await navigator.clipboard.writeText(selectedText);
+                        
+                        // Then delete the selected text
+                        const start = element.selectionStart;
+                        const end = element.selectionEnd;
+                        element.value = element.value.substring(0, start) + element.value.substring(end);
+                        element.setSelectionRange(start, start);
+                    } catch (err) {
+                        // Fallback to deprecated method if permission denied
+                        document.execCommand('cut');
+                    }
+                } else {
+                    // Fallback for browsers that don't support clipboard API
+                    document.execCommand('cut');
+                }
+                break;
+                
+            case 'copy':
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    try {
+                        const selectedText = element.value.substring(element.selectionStart, element.selectionEnd);
+                        await navigator.clipboard.writeText(selectedText);
+                    } catch (err) {
+                        document.execCommand('copy');
+                    }
+                } else {
+                    document.execCommand('copy');
+                }
+                break;
+                
+            case 'paste':
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    try {
+                        const text = await navigator.clipboard.readText();
+                        const start = element.selectionStart;
+                        const end = element.selectionEnd;
+                        element.value = element.value.substring(0, start) + text + element.value.substring(end);
+                        element.setSelectionRange(start + text.length, start + text.length);
+                    } catch (err) {
+                        document.execCommand('paste');
+                    }
+                } else {
+                    document.execCommand('paste');
+                }
+                break;
+                
+            case 'selectAll':
+                element.select();
+                break;
         }
     }
+    
+    // Apply to all existing text inputs initially
+    applyContextMenuToInputs();
+    
+    // Return a function that can be called to apply to dynamically added inputs
+    return {
+        applyToNewInput: function(input) {
+            eventManager.addEventListener(input, 'contextmenu', function(e) {
+            e.preventDefault();
+            activeElement = this;
+            showContextMenu(e.clientX, e.clientY);
+            });
+        }
+    };
 }
+
+function addContextMenuToInputs() {
+    try {
+        newInputs = document.querySelectorAll('input');
+
+        newInputs.forEach(input => {
+            contextMenuController.applyToNewInput(input);
+        });
+    } catch {}
+}
+
+// other section 
 
 function pageUpdater(cPage) {
     previouspage = curruntpage;
@@ -474,14 +652,16 @@ window.onload = async function() {
     profile = await isHaveProfile();
     
     if (profile.exists) {
-        document.body.insertAdjacentHTML('beforeend', UIComponents.userbutton);
-        // document.getElementsByTagName('body')[0].innerHTML += UIComponents.userbutton;
-        document.getElementById('user-button').innerHTML = `<font class="user-title">${profile.userName[0].toUpperCase()}${profile.userName[1]}</font>`;
+        loadUserButton(profile);
         dashboard();
     } else {
         loadUI("renderContainer","registerPages");   
+        document.querySelector("#nameInput").focus();
     }
  
+    // Initialize custom context menu
+    contextMenuController = initCustomContextMenu();
+    
     // register btn enter part
     try {
         const reg_inputs = Array.from(document.getElementsByClassName("reg-btns"));
@@ -497,9 +677,37 @@ window.onload = async function() {
         });
     } catch {}
 
-
-
+    addContextMenuToInputs()
 };
+
+function loadUserButton(profile) {
+    document.body.insertAdjacentHTML('beforeend', UIComponents.userbutton);
+    document.getElementById('user-button').innerHTML = `<font class="user-title">${profile.userName[0].toUpperCase()}${profile.userName[1]}</font>`;
+    
+    // Add click event to user button using event manager
+    eventManager.addEventListener(
+        document.getElementById('user-button'), 
+        'click', 
+        function(event) {
+            event.stopPropagation(); // Prevent the click from bubbling up to document
+            const dropbox = document.getElementById('userButtonDropbox');
+            dropbox.classList.toggle('hide');
+        }
+    );
+    
+    // Add click event to document to hide dropdown when clicking elsewhere
+    eventManager.addEventListener(
+        document, 
+        'click', 
+        function() {
+            const dropbox = document.getElementById('userButtonDropbox');
+            if (!dropbox.classList.contains('hide')) {
+                dropbox.classList.add('hide');
+            }
+        }
+    );
+}
+
 
 function loadUI(section,UIname) {
     if (UIComponents[UIname]) {
@@ -507,11 +715,14 @@ function loadUI(section,UIname) {
     } else {
         //alert(`UI element "${UIname}" not found.`);
     }
+
 }
 
 function nextPage(pageNumber) {
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
     document.getElementById(`page${pageNumber}`).classList.add('active');
+
+    document.querySelector(`#page${pageNumber}`).querySelector("input").focus();
 }
 
 function hideShow(id,visibility) {
@@ -571,7 +782,7 @@ async function setCollectionToUI() {
                 </div>
                 <font class="collection-tag-title">${letter}</font>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    xmlns="http://www.w3.org/2000/svg" class="tag-icon-md" style="display: none;">
+                    xmlns="http://www.w3.org/2000/svg" class="tag-icon-md">
                     <path fill-rule="evenodd" clip-rule="evenodd"
                         d="M3 12C3 10.8954 3.89543 10 5 10C6.10457 10 7 10.8954 7 12C7 13.1046 6.10457 14 5 14C3.89543 14 3 13.1046 3 12ZM10 12C10 10.8954 10.8954 10 12 10C13.1046 10 14 10.8954 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12ZM17 12C17 10.8954 17.8954 10 19 10C20.1046 10 21 10.8954 21 12C21 13.1046 20.1046 14 19 14C17.8954 14 17 13.1046 17 12Z"
                         fill="currentColor"></path>
@@ -594,13 +805,13 @@ async function setCollectionToUI() {
 
         // Hover to show/hide icon
         tag.addEventListener("mouseover", () => {
-            icon.style.display = 'block';
+            icon.style.opacity = '100%';
             tag.style.width = tagwidth + 15 + "px";
             titleElement.style.left = -20 + "px";
         });
 
         tag.addEventListener("mouseout", () => {
-            icon.style.display = 'none';
+            icon.style.opacity = '0%';
             tag.style.width = tagwidth + "px";
             titleElement.style.left = 0 + "px";
         });
@@ -644,19 +855,6 @@ async function setCollectionToUI() {
     });
 }
 
-function showUserDropDown() {
-    try {
-        let dropdown = document.getElementById('userButtonDropbox');
-        if (dropdown.classList.contains('show')) {
-            hideShow('userButtonDropbox', 'hide');
-        } else {
-            hideShow('userButtonDropbox', 'show');
-        }
-    } catch (error) {
-        console.error("Error in showUserDropDown:", error);
-    }
-}
-
 async function collectionDeleteSection(letter) {
     document.body.insertAdjacentHTML('beforeend', UIComponents.collection_delete_section);
     // document.getElementsByTagName('body')[0].innerHTML += UIComponents.co;
@@ -693,11 +891,14 @@ async function deleteCollection(letter) {
         const result = await response.json();
 
         if (response.ok) {
+            showNotification("Done", `Delete Collection Successfully \nName : ${letter}`, '', 3000);
             dashboard()
             return  // Call dashboard function if upload is successful
+        } else {
+            showNotification("Error", `Delete Collection UnSuccessful \nName : ${collectionName}`, response, 3000);
         }
     } catch (error) {
-        console.error("Error uploading files:", error);
+        showNotification("Error", "Other Error", error, 3000);
     }
 }
 
@@ -728,10 +929,13 @@ async function updateLlmModel(modelName) {
         const result = await response.json();
 
         if (response.ok) {
+            showNotification("Done", `LLM Model changed to ${modelName}`, '', 3000);
             return  // Call dashboard function if upload is successful
+        } else {
+            showNotification("Error", `LLM Model not changed to ${modelName}`, response, 3000);
         }
     } catch (error) {
-        console.error("Error uploading files:", error);
+        showNotification("Error", "Other Error", error, 3000);
     }
 }
 
@@ -797,13 +1001,20 @@ async function setting() {
             const swhAct = swh.getAttribute('data-switch');
             // const modTyp = swh.parentElement.getAttribute('data');
             const swhMod = swh.getAttribute('model-data')
-            
-            // updateLlmModel(swhMod);
-            updateLlmModel("chatGPT");
 
             swh.parentElement.querySelector('.switch-head').classList.remove('inactive');
             swh.parentElement.querySelector('.switch-head').classList.remove('active');
             swh.parentElement.querySelector('.switch-head').classList.add(swhAct);
+            
+            // updateLlmModel(swhMod);
+            if (swhMod === "chatGPT") {
+                updateLlmModel("chatGPT");
+            } else {
+                showNotification("Error", `Unable to Change`, `Switching to ${swhMod} is not supported at this stage. \nThis feature will be implemented in Stage 3.`, 3000);
+                swh.parentElement.querySelector('.switch-head').classList.remove('inactive');
+                swh.parentElement.querySelector('.switch-head').classList.remove('active');
+                swh.parentElement.querySelector('.switch-head').classList.add('inactive');
+            }
         });
     });
 }
@@ -817,6 +1028,8 @@ async function collectionDocumentUpdateSection() {
     collectionSectionUpdateBTN = document.getElementById('collectionDocumentUploadSectionContainer');
     collectionSectionUpdateBTN.focus();
     addKeyEventInElement(document, collectionSectionUpdateBTN, "Enter");
+
+    addContextMenuToInputs()
 }
 
 async function updateCollectionDocuments(event) {
@@ -882,14 +1095,13 @@ async function updateCollectionDocuments(event) {
         const result = await response.json();
 
         if (response.ok) {
+            showNotification("Done", `Add file Successfully`, '', 3000);
             backToMessage(myevent);  // Call dashboard function if upload is successful
         } else {
-            //alert(`Upload failed: ${result.error}`);
+            showNotification("Error", `Add file UnSuccessful`, response, 3000);
         }
     } catch (error) {
         showNotification('Error', 'Other Error',`${error}`, 3000);
-        // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="${error}">Error</span>`;
-        //alert("Upload failed. See console for details.");
     }
 }
 
@@ -901,23 +1113,6 @@ function backTo(event) {
         Section.parentNode.removeChild(Section);
     }
     hideShow('userButtonDropbox','hide');
-    // switch (previouspage) {
-    //     case 'dashbord':
-    //         dashboard();
-    //         break;
-    //     case 'userSetting':
-    //         setting();
-    //         break;
-    //     case 'message':
-    //         try {
-    //             document.getElementById('messageInput').addEventListener("keypress", function(event) {
-    //                 if (event.key === "Enter") {
-    //                     submitQuery();
-    //                 }
-    //             });
-    //         } catch {}
-    //         break;
-    // };
     try {
         document.getElementById('messageInput').addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
@@ -941,9 +1136,14 @@ function backToMessage(event) {
 async function userDataEditSection(event) {
     let clickedElement = event.currentTarget;
     let userData = clickedElement.getAttribute("data");
-    const password = document.getElementById('checkpasswordInput').value;
-    const isValide = await checkPassword(password);
     var Section = document.querySelector(`.user-password-Authontication-section`);
+    const password = document.getElementById('checkpasswordInput').value;
+    if (password == '') {
+        showNotification("Error", "Empty Password", "", 3000);
+        Section.parentNode.removeChild(Section);
+        return;
+    }
+    const isValide = await checkPassword(password);
     if (Section) {
         Section.parentNode.removeChild(Section);
     }
@@ -961,7 +1161,9 @@ async function userDataEditSection(event) {
             default:
                     break;
         }
-    } else {}
+    } else {
+        showNotification("Error", "Incorrect Password",'', 3000);
+    }
 }
 
 function userNameEditSection() {
@@ -987,6 +1189,7 @@ function userNameEditSection() {
                 const result = await response.json();
 
                 if (response.ok) {
+                    showNotification("Done", "User Name changed", '', 3000);
                     var settingSection = document.querySelector(`.user-setting-section`);
                     if (settingSection) {
                         settingSection.parentNode.removeChild(settingSection);
@@ -998,13 +1201,15 @@ function userNameEditSection() {
                         editSection.parentNode.removeChild(editSection);
                     }
                 } else {
-                    console.log(response);
+                    showNotification("Error", "User Name not change", response, 3000);
                 }
             }
         } catch (error) {
-            console.log(error);
+            showNotification("Error", "Other Error", error, 3000);
         }
     });
+
+    addContextMenuToInputs()
 }
 
 async function userAPIKeyEditSection() {
@@ -1036,21 +1241,22 @@ async function userAPIKeyEditSection() {
                 const result = await response.json();
 
                 if (response.ok) {
+                    showNotification("Done", "API Key changed", '', 3000);
                     var editSection = document.querySelector(`.user-apikey-edit-section`);
                     if (editSection) {
                         editSection.parentNode.removeChild(editSection);
                     }
                 } else {
-                    console.log(response);
+                    showNotification("Error", "API Key not change", response, 3000);
                 }
             }
         } catch (error) {
-            console.log(error);
+            showNotification("Error", "Other Error", error, 3000);
         }
     });
     // chatGPTapikeyEditInput , geminiapikeyEditInput
 
-    
+    addContextMenuToInputs()
 }
 
 function userPasswordEditSection() {
@@ -1080,19 +1286,27 @@ function userPasswordEditSection() {
                     const result = await response.json();
     
                     if (response.ok) {
+                        showNotification("Done", "Password changed", '', 3000);
                         var editSection = document.querySelector(`.user-password-edit-section`);
                         if (editSection) {
                             editSection.parentNode.removeChild(editSection);
                         }
                     } else {
-                        console.log(response);
+                        showNotification("Error", "Other Error", response, 3000);
                     }
+                } else {
+                    showNotification("Error", "Password Mismatch", '', 3000);
                 }
-            }  
+            } else {
+                showNotification("Error", "Empty Password", '', 3000);
+            } 
         } catch (error) {
             console.log(error);
+            showNotification("Error", "Other Error", error, 3000);
         }
     });
+
+    addContextMenuToInputs()
 }
 
 function passwordAutonticationSection(event) {
@@ -1107,6 +1321,7 @@ function passwordAutonticationSection(event) {
 
     addKeyEventInElement(document, passwordsubmitBTN, "Enter");
 
+    addContextMenuToInputs()
 }
 
 function addDocument() {
@@ -1117,6 +1332,8 @@ function addDocument() {
     uploadCollectionBTN.focus();
 
     addKeyEventInElement(document, uploadCollectionBTN, "Enter");
+
+    addContextMenuToInputs()
     
 }
 
@@ -1237,6 +1454,8 @@ async function messageSection(collectionName) {
             box.classList.replace('show', 'hide');
         });
     }
+
+    addContextMenuToInputs()
 }
 
 async function fileDeleteSection(filename,collectionname) {
@@ -1278,12 +1497,14 @@ async function deleteFile(filename,collectionname) {
         const result = await response.json();
 
         if (response.ok) {
-            console.log(result);
+            showNotification("Done", `Delete File Successfully \nName : ${filename}`, '', 3000);
             return messageSection(collectionname);
               // Call dashboard function if upload is successful
+        } else {
+            showNotification("Error", `Delete File UnSuccessful \nName : ${filename}`, response, 3000);
         }
     } catch (error) {
-        console.error("Error uploading files:", error);
+        showNotification("Error", "Other Error", error, 3000);
         return;
     }
 }
@@ -1341,7 +1562,6 @@ function sideBar(visibility) {
         });
     }
 }
-
 
 async function showSuggestionsCallection() {
     const input = document.getElementById("collectionSelect");
@@ -1567,14 +1787,14 @@ async function uploadDocument() {
         const result = await response.json();
 
         if (response.ok) {
+            showNotification("Done", `Add Collection Successfully \nName : ${collectionName}`, '', 3000);
             dashboard();  // Call dashboard function if upload is successful
         } else {
-            //alert(`Upload failed: ${result.error}`);
+            showNotification("Error", `Add Collection UnSuccessful \nName : ${collectionName}`, response, 3000);
+            
         }
     } catch (error) {
         showNotification('Error', 'Other Error',`${error}`, 3000);
-        // document.getElementsByClassName('upload-button')[0].innerHTML = `<span class="add-tag-title" title="${error}">Error</span>`;
-        //alert("Upload failed. See console for details.");
     }
 }
 
