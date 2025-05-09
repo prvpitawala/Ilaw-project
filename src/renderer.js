@@ -1,3 +1,8 @@
+import { NotificationManager } from "./Manager/NotificationManager.js";
+import { UIManager } from './Manager/UIManager.js';
+import { Registration } from  './Sections/Registration.js';
+import { Dashbord } from  './Sections/Dashbord.js';
+
 const UIComponents = {
     registerPages:`
     <!-- Page 1: Enter Name -->
@@ -289,6 +294,11 @@ const UIComponents = {
     </div>`
 };
 
+const notificationManager = new NotificationManager();
+const uiManager = new UIManager(notificationManager);
+
+const registerComponant = new Registration(notificationManager);
+const dashboardComponant = new dashboard(notificationManager);
 var collections;
 var curruntpage; //'dashbord','message','userSetting'
 var previouspage;
@@ -649,22 +659,26 @@ function pageUpdater(cPage) {
 }
 
 window.onload = async function() {
-    profile = await isHaveProfile();
+    uiManager.registerComponent(registerComponant,'registration-card');
+    uiManager.registerComponent()
+    
+    const profile = await isHaveProfile();
     
     if (profile.exists) {
         loadUserButton(profile);
         dashboard();
     } else {
-        loadUI("renderContainer","registerPages");   
-        // user name input part (input element focus and key event trigged)
-        document.querySelector("#nameInput").focus();
-        addKeyEventInElement(document,document.querySelector(`#page1`).querySelector("button"),"Enter");
+        uiManager.navigateToView('registration-card','register');
+        // loadUI("renderContainer","registerPages");   
+        // // user name input part (input element focus and key event trigged)
+        // document.querySelector("#nameInput").focus();
+        // addKeyEventInElement(document,document.querySelector(`#page1`).querySelector("button"),"Enter");
     }
  
     // Initialize custom context menu
-    contextMenuController = initCustomContextMenu();
+    // contextMenuController = initCustomContextMenu();
     
-    addContextMenuToInputs()
+    // addContextMenuToInputs()
 };
 
 function loadUserButton(profile) {

@@ -413,7 +413,7 @@ def get_profile_name():
         return jsonify({"message": {"userName": user_name}}), 200
 
     except Exception as e:
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 404 
 
 # Get Profile APIKey Endpoint
 @app.route("/get/profile/api", methods=["POST"])

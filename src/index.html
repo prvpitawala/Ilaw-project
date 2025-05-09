@@ -7,12 +7,21 @@
     <link rel="stylesheet" href="./styles/styles.css">
 </head>
 <body>
+    <!-- App header -->
     <header class="title-bar" id="titleBar"></header>
+    <!-- Notification system -->
     <div class="notification-container" id="notification-container"></div>
-    <main class="body-container" id="bodeContainer">
-        <aside id="sideContainer" class="sideContainer hide"></aside>
-        <section class="container" id="renderContainer"></section>
+    <!-- Main content area -->
+    <main class="main-container" id="main-container">
+        <!-- Sidebar (hidden by default) -->
+        <aside id="sidebar" class="sidebar --hidden"></aside>
+        
+        <!-- Rendering views -->
+        <section class="registration-card --hidden" id="registration-card"></section>
+        <section class="settings-card --hidden" id="settings-card"></section>
+        <section class="container --hidden" id="dashboard"></section>
+        <section class="collection-update-card --hidden"></section>
     </main>
-    <script src="renderer.js"></script>
+    <script type="module" src="renderer.js"></script>
 </body>
 </html>
