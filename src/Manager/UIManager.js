@@ -4,15 +4,19 @@
 import { LayoutManager } from './LayoutManager.js';
 import { ComponentManager } from './ComponentManager.js';
 import { EventManager } from './EventManager.js';
-import { STAGES,EVENTGROUPS } from './constants.js';
+import { STAGES,EVENTGROUPS,EVENTIDVSGROUP } from './constants.js';
 
 export class UIManager{
+  /**
+   * @param {import("../Manager/NotificationManager.js").NotificationManager} notificationManager
+  */
   constructor(notificationManager) {
     this.layoutManager = new LayoutManager();
     this.componentManager = new ComponentManager();
     this.eventManager = new EventManager();
     this.notificationManager = notificationManager;
     this.currentView = null;
+    this.registedComponent = new Map();
     
     // Setup system events
     this.setupSystemEvents();
@@ -21,9 +25,77 @@ export class UIManager{
   /**
    * Setup essential system events
    */
-  setupSystemEvents() {
+  async setupSystemEvents() {
     // Example: listening for window resize
     window.addEventListener('resize', this.handleResize.bind(this));
+    // document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.setAttribute('data-theme', await this.getAppColorTheme());
+    this.eventManager.registerEvent(document,'keydown',async (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 't') {
+        if (document.documentElement.getAttribute('data-theme') === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'light');
+          await this.changeAppColorTheme('light');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          await this.changeAppColorTheme('dark');
+        }
+      }
+    },'system');
+  }
+
+  async changeAppColorTheme(theme) {
+    try {
+      const responce = await electronAPI.changeColorTheme(theme,'Raveen2244@');
+      // Handle different response statuses
+      if (responce.status === 401) {
+        this.notificationManager.error('Authorization header required. Please log in again.');
+      }
+      if (responce.status === 500) {
+        this.notificationManager.error('Server error. Please try again later.');
+      }
+      if (responce.status === 204) {
+        this.notificationManager.info('No profile found.');
+      }
+      if (responce.status === 200 && responce.data.message.length > 0) {
+        return;
+      }
+      if (responce.status !== 200) {
+        // this.notificationManager.error(`Error fetching profile: ${responce.status}`);
+      }
+      return;
+
+    } catch (error) {
+      // this.notificationManager.error(`Error fetching profile: ${error.message}`);
+      return;
+    }
+  }
+
+  async getAppColorTheme() {
+    try {
+      const responce = await electronAPI.getColorTheme('Raveen2244@');
+      // Handle different response statuses
+      var colorTheme = 'light';
+      if (responce.status === 401) {
+        this.notificationManager.error('Authorization header required. Please log in again.');
+      }
+      if (responce.status === 500) {
+        this.notificationManager.error('Server error. Please try again later.');
+      }
+      if (responce.status === 204) {
+        this.notificationManager.info('No profile found.');
+      }
+      if (responce.status === 200) {
+        colorTheme = responce.data.message.theme;
+      }
+      if (responce.status !== 200) {
+        // this.notificationManager.error(`Error fetching color theme: ${responce.status}`);
+      }
+      return colorTheme;
+
+    } catch (error) {
+      // this.notificationManager.error(`Error fetching profile: ${error.message}`);
+      return 'light';
+    }
   }
 
   /**
@@ -46,7 +118,7 @@ export class UIManager{
    * @param {string} viewId - ID of view to navigate to
    * @param {string} viewGroup - view group
    */
-  navigateToView(viewId, viewGroup) {
+  navigateToView(viewId, viewGroup, options = {}) {
     const viewElement = document.getElementById(viewId);
     if (!viewElement) {
       console.error(`View with ID ${viewId} not found`);
@@ -57,11 +129,14 @@ export class UIManager{
     this.layoutManager.setAsPrimary(viewElement);
     
     // Enable events for this view, disable others
-    let removeGroups = EVENTGROUPS;
+    var removeGroups = new Set(EVENTGROUPS);
     removeGroups.delete(viewGroup);
 
     this.eventManager.disableEventGroups(removeGroups)
     this.eventManager.enableEventGroup(viewGroup);
+    // navigate function
+    this.registedComponent.get(viewId).main.navigator(options);
+    
 
     this.currentView = viewId;
   }
@@ -74,10 +149,13 @@ export class UIManager{
   registerComponent(componentData, containerId) {
     // Render component
     const web_content = componentData.main.componant();
+    const web_style = componentData.main.style();
     this.componentManager.renderComponent(
       containerId,
-      web_content
+      web_content,
+      web_style
     );
+    
     this.layoutManager.setComponentStage(document.getElementById(containerId), STAGES.HIDDEN);
     
     // Setup events for the component
@@ -91,6 +169,8 @@ export class UIManager{
         );
       });
     }
+    // Store component data
+    this.registedComponent.set(containerId, componentData); 
   }
 
   /**
@@ -128,5 +208,22 @@ export class UIManager{
     
     // Temporarily disable component events
     this.eventManager.disableEventGroup(componentId, true);
+  }
+
+  eventgroup(viewID) {
+    return EVENTIDVSGROUP[viewID];
+  }
+
+  userProfileButtonVisibility(isVisible) {
+    const userbuttonContainer = document.querySelector('#user-button-container');
+    if (userbuttonContainer) {
+      if (isVisible) {
+        userbuttonContainer.style.zIndex = 1;
+      } else {
+        userbuttonContainer.style.zIndex = 0;
+      }
+    } else {
+      this.notificationManager.error('User button container not found');
+    }
   }
 }

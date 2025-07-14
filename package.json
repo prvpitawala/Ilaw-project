@@ -27,6 +27,7 @@
     "files": [
       "**/*",
       "!node_modules/*",
+      "!Documentation/*",
       "!dist/LICENSES.chromium.html",
       "!dist/*.pak",
       "!dist/d3dcompiler_47.dll",
@@ -56,7 +57,9 @@
     }
   },
   "dependencies": {
-    "bootstrap": "^5.3.3"
+    "bootstrap": "^5.3.3",
+    "electron-log": "^5.4.0",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "electron": "^35.2.0",

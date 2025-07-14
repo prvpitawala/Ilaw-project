@@ -52,47 +52,6 @@ load_dotenv(dotenv_path=ENV_DIR)
 # Configure OpenAI API key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# def get_documents_from_folder(folder_path: str) -> Dict[str, str]:
-#     """
-#     Extract text documents from a folder
-    
-#     Args:
-#         folder_path: Path to the folder containing documents
-        
-#     Returns:
-#         Dictionary mapping filenames to their content
-#     """
-#     documents = {}
-    
-#     # Process each file in the folder and its subfolders
-#     for root, _, files in os.walk(folder_path):
-#         for file in files:
-#             # Focus on text files
-#             if file.endswith(('.txt')):
-#                 file_path = os.path.join(root, file)
-#                 try:
-#                     with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
-#                         content = f.read()
-#                         relative_path = os.path.relpath(file_path, folder_path)
-#                         documents[relative_path] = content
-#                 except Exception as e:
-#                     print(f"Error reading file {file_path}: {e}")
-
-#             # Focus on pdf files 
-#             if file.endswith(('.pdf')):
-#                 file_path = os.path.join(root, file)
-#                 try:
-#                     content = extract_text(file_path)
-#                     relative_path = os.path.relpath(file_path, folder_path)
-#                     txt_filename = f"{os.path.splitext(relative_path)[0]}.txt"
-
-#                     # save in the document dic as .txt
-#                     documents[txt_filename] = content
-#                 except Exception as e:
-#                     print(f"Error reading file {file_path}: {e}")
-    
-#     return documents
-
 def get_documents_from_folder(folder_path: str) -> Dict[str, str]:
     """
     Extract text documents from a folder
@@ -140,7 +99,6 @@ def get_documents_from_folder(folder_path: str) -> Dict[str, str]:
                 print(f"Error reading file {file_path}: {e}")
     
     return documents   
-
 
 def get_documents_from_filenames(root: str, filenames: List[str], collection_name: str) -> Dict[str, str]:
     """
@@ -193,7 +151,6 @@ def get_documents_from_filenames(root: str, filenames: List[str], collection_nam
     
     return documents
 
-
 def save_documents_as_text_files_in_folder(documents, output_dir="extracted_documents"):
     """
     Given a dictionary of documents, save each document as a text file in the output directory.
@@ -221,9 +178,6 @@ def save_documents_as_text_files_in_folder(documents, output_dir="extracted_docu
             print(f"Saved: {output_path}")
         except Exception as e:
             print(f"Error saving {filename}: {e}")
-
-
-
 
 def chunk_text(chunk_size, chunk_overlap, documents: Dict[str, str]) -> List[Dict[str, Any]]:
     """
@@ -254,8 +208,6 @@ def chunk_text(chunk_size, chunk_overlap, documents: Dict[str, str]) -> List[Dic
                 }
             })
     return chunks
-
-
 
 def save_chunks_as_text_files(chunks: List[Dict[str, Any]], output_dir: str = "chunks") -> None:
     """
@@ -290,7 +242,6 @@ def save_chunks_as_text_files(chunks: List[Dict[str, Any]], output_dir: str = "c
     
     print(f"Successfully saved {len(chunks)} chunk files to {output_dir}")
 
-
 def clear_chroma_database(chroma_client,collection_name=None):
     """
     Clear data from ChromaDB
@@ -320,67 +271,6 @@ def clear_chroma_database(chroma_client,collection_name=None):
             print(f"All collections have been deleted")
     except Exception as e:
         print(f"Error clearing database: {e}")
-
-
-# def get_chatgpt_response(prompt, system_prompt=None, model="gpt-3.5-turbo"):
-#     """
-#     Send a query to ChatGPT 3.5 and get the response.
-    
-#     Parameters:
-#     prompt (str): The query text to send to ChatGPT
-#     api_key (str): Your OpenAI API key
-#     system_prompt (str, optional): System instructions for ChatGPT
-#     model (str): OpenAI model to use (default: gpt-3.5-turbo)
-    
-#     Returns:
-#     str: The response from ChatGPT
-#     """
-#     headers = {
-#         "Content-Type": "application/json",
-#         "Authorization": f"Bearer {openai.api_key}"
-#     }
-    
-#     # Start with an empty messages list
-#     messages = []
-    
-#     # Add system prompt if provided
-#     if system_prompt:
-#         messages.append({"role": "system", "content": system_prompt})
-    
-#     # Add user prompt
-#     messages.append({"role": "user", "content": prompt})
-    
-#     payload = {
-#         "model": model,
-#         "messages": messages,
-#         "temperature": 0.2
-#     }
-    
-#     try:
-#         response = requests.post(
-#             "https://api.openai.com/v1/chat/completions",
-#             headers=headers,
-#             data=json.dumps(payload)
-#         )
-        
-#         # Check if the request was successful
-#         response.raise_for_status()
-        
-#         # Parse the response
-#         response_data = response.json()
-        
-#         # Extract the message content
-#         return response_data["choices"][0]["message"]["content"]
-    
-#     except requests.exceptions.HTTPError as e:
-#         return f"HTTP Error: {e}"
-#     except requests.exceptions.ConnectionError:
-#         return "Error: Connection failed"
-#     except KeyError:
-#         return f"Error: Unexpected response format: {response_data}"
-#     except Exception as e:
-#         return f"Error: {str(e)}"
-
 
 def format_Prompt_to_LLM(doc_count, results, user_quary):
     prompt_to_llm = "\n".join([f"\n\n<CONTEXT_{i+1}>\n\n{doc['text']}\n\n</CONTEXT_{i+1}>" for i, doc in enumerate(results[:doc_count])])

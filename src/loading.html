@@ -1,22 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI RAG LLM</title>
-    <link rel="stylesheet" href="./styles/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starting Application</title>
+  <style>
+    :root {
+      --color-background: #050509;
+      --color-surface: rgba(51, 51, 82, 0);
+      --color-surface-light: rgba(26, 26, 34, 0.8);
+      --color-border: rgba(42, 42, 50, 0.5);
+      --color-primary: #5A63AC;
+      --color-primary-hover: #505999;
+      --color-primary-active: #5A63AC;
+      --color-text-primary: #f7f7f8;
+      --color-text-secondary: #8e8ea0;
+      --color-text-tertiary: #6e6e80;
+      --radius-small: 8px;
+      --radius-medium: 12px;
+      --radius-large: 20px;
+      --shadow-small: 0 2px 5px rgba(0, 0, 0, 0.1);
+      --shadow-medium: 0 8px 30px rgba(0, 0, 0, 0.2);
+      --shadow-large: 0px 0px 0px rgba(0, 0, 0, 0.4);
+      --transition-fast: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-standard: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-spring: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      --transition-bounce: 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+      --blur-standard: 15px;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--color-background);
+      color: var(--color-text-primary);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      user-select: none;
+      overflow: hidden;
+    }
+    
+    .loading-container {
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      position: relative;
+    }
+    
+    .loading-title {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+      margin-bottom: 40px;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeIn 1s forwards 0.3s;
+    }
+    
+    .loading-animation {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80px;
+      margin-bottom: 30px;
+    }
+    
+    .loading-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--color-primary);
+      margin: 0 6px;
+      transform: scale(0);
+      opacity: 0;
+    }
+    
+    .dot1 {
+      animation: pulseDot 1.4s infinite ease-in-out;
+    }
+    
+    .dot2 {
+      animation: pulseDot 1.4s infinite ease-in-out 0.2s;
+    }
+    
+    .dot3 {
+      animation: pulseDot 1.4s infinite ease-in-out 0.4s;
+    }
+    
+    .loading-ring {
+      display: inline-block;
+      position: relative;
+      width: 64px;
+      height: 64px;
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+    }
+    
+    .loading-ring:after {
+      content: "";
+      display: block;
+      width: 46px;
+      height: 46px;
+      margin: 8px;
+      border-radius: 50%;
+      border: 2px solid var(--color-primary);
+      border-color: var(--color-primary) transparent var(--color-primary) transparent;
+      animation: loadingRing 1.2s linear infinite;
+    }
+    
+    .app-icon {
+      width: 60px;
+      height: 60px;
+      background-color: var(--color-surface-light);
+      border-radius: var(--radius-medium);
+      margin: 0 auto 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: var(--shadow-medium);
+      opacity: 0;
+      transform: scale(0.9);
+      animation: popIn 0.6s var(--transition-spring) forwards;
+    }
+    
+    .app-icon svg {
+      width: 32px;
+      height: 32px;
+      fill: var(--color-primary);
+    }
+    
+    .loading-status {
+      color: var(--color-text-secondary);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.1px;
+      opacity: 0;
+      animation: fadeIn 0.8s forwards 0.5s;
+    }
+    
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes popIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      70% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    @keyframes pulseDot {
+      0%, 100% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes loadingRing {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    
+    /* For draggable regions */
+    .draggable {
+      -webkit-app-region: drag;
+    }
+    
+    .no-drag {
+      -webkit-app-region: no-drag;
+    }
+    
+    /* Subtle background glow effect */
+    .bg-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(90, 99, 172, 0.15) 0%, rgba(5, 5, 9, 0) 70%);
+      z-index: -1;
+      opacity: 0;
+      animation: glowPulse 4s ease-in-out infinite alternate, fadeIn 2s forwards;
+    }
+    
+    @keyframes glowPulse {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.2);
+      }
+    }
+  </style>
 </head>
-<body>
-    <header class="title-bar" id="titleBar"></header>
-    <main class="body-container" id="bodeContainer">
-        <section class="container" id="renderContainer">
-            <div class="loading-container">
-                <div class="loading-spinner">
-                    <img src="../public/icons/loading.webp" class="server-start-lording-gif">
-                </div>
-                <p class="loading-page-text">Starting...</p>
-            </div>
-        </section>
-    </main>
+<body class="draggable">
+  <div class="bg-glow"></div>
+  <div class="loading-container">
+    <div class="app-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10Z" />
+      </svg>
+    </div>
+    <h2 class="loading-title">Starting Application</h2>
+    <div class="loading-animation">
+      <div class="loading-ring"></div>
+    </div>
+    <p class="loading-status">Initializing...</p>
+  </div>
+
+  <script>
+    // Animation and text updating logic
+    document.addEventListener('DOMContentLoaded', () => {
+      const statusElement = document.querySelector('.loading-status');
+      const statusMessages = [
+        "Initializing...",
+        "Preparing resources...",
+        "Almost ready..."
+      ];
+      
+      let messageIndex = 0;
+      
+      // Change status message with a subtle fade effect
+      function updateStatus() {
+        statusElement.style.opacity = '0';
+        
+        setTimeout(() => {
+          messageIndex = (messageIndex + 1) % statusMessages.length;
+          statusElement.textContent = statusMessages[messageIndex];
+          statusElement.style.opacity = '1';
+        }, 300);
+      }
+      
+      // Update status message every 2.5 seconds
+      setInterval(updateStatus, 2500);
+    });
+  </script>
 </body>
 </html>

@@ -21,7 +21,7 @@ export class EventManager {
         return;
       }
     
-      const id = element === document ? 'document' : element.id || 'anonymous';
+      const id = element === document ? 'document' : element === window ? 'window' : element === document.documentElement? 'documentDocumentElement' : element.id || 'anonymous';
     
       const handlerId = `${id}-${eventType}-${group}`;
     
@@ -64,7 +64,9 @@ export class EventManager {
      */
     disableEventGroups(groups, temporary = false) {
       for (const group of groups) {
-        if (!this.activeEventGroups.has(group)) continue;
+        if (!this.activeEventGroups.has(group)) {
+          continue;
+        }
 
         // Don't allow disabling system events
         if (group === 'system') {

@@ -6,3 +6,4 @@ Ilaw System-Setup-1.0.0.exe
 
 build/rag_app
 backend/__pycache__
+backend/flask_backend.log
