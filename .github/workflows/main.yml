@@ -1,30 +1,57 @@
-name: build
+name: Trivy Security Scan
+
 on:
-  push:
-    branches:
-      - main
   pull_request:
+    branches: [ "main", "develop" ]
+  push:
+    branches: [ "main" ]
+  schedule:
+    - cron: '0 2 * * *'   # Daily scan at 2 AM
+
 jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-24.04
+  trivy-scan:
+    runs-on: ubuntu-latest
+
     permissions:
-      contents: read          # Required to checkout and read repo files
-      security-events: write  # Required to upload SARIF files to Security tab
+      contents: read
+      security-events: write
+      actions: read
+
     steps:
-      - name: Checkout code
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@0.33.1
+      - name: Run Trivy vulnerability & misconfiguration scan
+        uses: aquasecurity/trivy-action@0.21.0
         with:
-          scan-type: 'fs'
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
+          scanners: vuln,secret,misconfig,license
+          severity: CRITICAL,HIGH
           ignore-unfixed: true
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL'
+          exit-code: 1
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
+      - name: Upload results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: trivy-results.sarif
+
+      - name: Generate HTML report
+        uses: aquasecurity/trivy-action@0.21.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: html
+          output: trivy-report.html
+          scanners: vuln,secret,misconfig,license
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+        continue-on-error: true
+
+      - name: Upload HTML report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-security-report
+          path: trivy-report.html
