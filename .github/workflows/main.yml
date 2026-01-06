@@ -2,7 +2,7 @@ name: build
 on:
   push:
     branches:
-      - main
+      - Stage-3
   pull_request:
 jobs:
   build:
